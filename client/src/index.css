@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-darker text-gray-100 font-mono;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(239, 68, 68, 0.1) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .cyber-border {
+    @apply border border-cyber-red/30 shadow-cyber;
+  }
+  
+  .cyber-card {
+    @apply bg-cyber-dark/90 backdrop-blur-sm border border-cyber-red/20 rounded-lg shadow-cyber;
+  }
+  
+  .cyber-button {
+    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber transition-all duration-300;
+  }
+  
+  .cyber-button-green {
+    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber-red transition-all duration-300;
+  }
+  
+  .cyber-button-purple {
+    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber transition-all duration-300;
+  }
+  
+  .cyber-input {
+    @apply w-full px-3 py-2 bg-cyber-dark/80 border border-cyber-red/30 rounded text-gray-100 placeholder-gray-500 focus:border-cyber-red focus:outline-none focus:ring-1 focus:ring-cyber-red;
+  }
+  
+  .cyber-sidebar-item {
+    @apply flex items-center px-4 py-3 text-gray-300 hover:text-cyber-red hover:bg-cyber-red/10 transition-all duration-300 border-l-4 border-transparent hover:border-cyber-red;
+  }
+  
+  .cyber-sidebar-item.active {
+    @apply text-cyber-red bg-cyber-red/10 border-cyber-red;
+  }
+}
