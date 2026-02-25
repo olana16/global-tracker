@@ -25,6 +25,7 @@ const People = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPerson, setSelectedPerson] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [viewMode, setViewMode] = useState('list') // 'list', 'add', 'edit', 'details'
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,64 +40,7 @@ const People = () => {
           setPeople(response.data)
         } else {
           // Use mock data if API fails - updated to match actual schema
-          setPeople([
-            {
-              _id: '507f1f77bcf86cd7db39a001',
-              firstName: 'John',
-              lastName: 'Smith',
-              email: 'john.smith@techcorp.com',
-              phone: '+1-555-0123',
-              position: 'CEO',
-              company: 'TechCorp International',
-              country: 'United States',
-              city: 'New York',
-              department: 'Executive',
-              isActive: true,
-              createdAt: '2024-01-15T00:00:00.000Z'
-            },
-            {
-              _id: '507f1f77bcf86cd7db39a002',
-              firstName: 'Sarah',
-              lastName: 'Johnson',
-              email: 'sarah.j@globalfinance.com',
-              phone: '+44-20-1234-5678',
-              position: 'CFO',
-              company: 'Global Finance Ltd',
-              country: 'United Kingdom',
-              city: 'London',
-              department: 'Finance',
-              isActive: true,
-              createdAt: '2024-01-14T00:00:00.000Z'
-            },
-            {
-              _id: '507f1f77bcf86cd7db39a003',
-              firstName: 'Michael',
-              lastName: 'Chen',
-              email: 'm.chen@securenet.de',
-              phone: '+49-30-1234-5678',
-              position: 'Security Analyst',
-              company: 'SecureNet Systems',
-              country: 'Germany',
-              city: 'Berlin',
-              department: 'Security',
-              isActive: true,
-              createdAt: '2024-01-13T00:00:00.000Z'
-            },
-            {
-              _id: '507f1f77bcf86cd7db39a004',
-              firstName: 'Emma',
-              lastName: 'Wilson',
-              email: 'emma.w@dataflow.jp',
-              phone: '+81-3-1234-5678',
-              position: 'Data Scientist',
-              company: 'DataFlow Analytics',
-              country: 'Japan',
-              city: 'Tokyo',
-              department: 'Analytics',
-              isActive: true,
-              createdAt: '2024-01-12T00:00:00.000Z'
-            }
-          ])
+          setPeople([])
         }
       } catch (error) {
         console.error('Error fetching people:', error)
@@ -163,7 +107,10 @@ const People = () => {
         if (updatedResponse.success) {
           setPeople(updatedResponse.data)
         }
+        // Close modal and go back to list view
+        setShowAddModal(false)
         setSelectedPerson(null)
+        setViewMode('list')
       } else {
         alert('Failed to update person: ' + (response.message || 'Unknown error'))
       }
@@ -175,6 +122,7 @@ const People = () => {
 
   const handleEditPerson = (person) => {
     setSelectedPerson(person)
+    setViewMode('edit')
     setShowAddModal(true)
   }
 
@@ -242,7 +190,10 @@ const People = () => {
           <p className="text-gray-400">Manage and monitor personnel records</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setShowAddModal(true)
+            setViewMode('add')
+          }}
           className="cyber-button-green flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -361,7 +312,10 @@ const People = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => setSelectedPerson(person)}
+                          onClick={() => {
+                            setSelectedPerson(person)
+                            setViewMode('details')
+                          }}
                           className="text-cyber-red hover:text-cyber-green transition-colors"
                         >
                           <Eye className="w-4 h-4" />
@@ -388,8 +342,8 @@ const People = () => {
         </div>
       </div>
 
-      {/* Add Person Modal */}
-      {showAddModal && (
+      {/* Add/Edit Person Modal */}
+      {showAddModal && (viewMode === 'add' || viewMode === 'edit') && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="cyber-card p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-cyber-red mb-4">
@@ -528,6 +482,7 @@ const People = () => {
                   onClick={() => {
                     setShowAddModal(false)
                     setSelectedPerson(null)
+                    setViewMode('list')
                   }}
                   className="cyber-button"
                 >
@@ -546,13 +501,16 @@ const People = () => {
       )}
 
       {/* Person Details Modal */}
-      {selectedPerson && !showAddModal && (
+      {viewMode === 'details' && selectedPerson && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="cyber-card p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-cyber-red">Person Details</h2>
               <button
-                onClick={() => setSelectedPerson(null)}
+                onClick={() => {
+                  setSelectedPerson(null)
+                  setViewMode('list')
+                }}
                 className="text-cyber-red hover:text-cyber-yellow transition-colors"
               >
                 <X className="w-5 h-5" />
