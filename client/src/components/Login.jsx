@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Shield, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Shield, Mail, Lock, Eye, EyeOff, AlertCircle, LogIn } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Login = () => {
@@ -46,10 +46,10 @@ const Login = () => {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="p-3 bg-cyber-blue/20 rounded-full border border-cyber-blue/50">
-                <Shield className="w-8 h-8 text-cyber-blue" />
+                <LogIn className="w-8 h-8 text-cyber-blue" />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-cyber-blue mb-2">Global Security Tracker</h1>
+            <h1 className="text-2xl font-bold text-cyber-blue mb-2">Global Registration Tracker</h1>
             <p className="text-gray-400">Sign in to access the dashboard</p>
           </div>
 

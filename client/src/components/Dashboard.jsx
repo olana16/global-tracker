@@ -10,7 +10,8 @@ import {
   Clock,
   Eye,
   Download,
-  Upload
+  Upload,
+  UserCheck
 } from 'lucide-react'
 import { dashboardAPI } from '../services/api'
 import { companiesAPI } from '../services/api'
@@ -376,7 +377,6 @@ const Dashboard = () => {
           
           <div className="flex items-center space-x-2 px-3 py-1 bg-cyber-green/20 border border-cyber-green/50 rounded">
             <div className="w-2 h-2 bg-cyber-green rounded-full animate-pulse"></div>
-            <span className="text-cyber-green text-sm">Live</span>
           </div>
           <span className="text-gray-400 text-sm">Last updated: {new Date().toLocaleTimeString()}</span>
         </div>

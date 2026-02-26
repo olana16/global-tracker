@@ -10,7 +10,8 @@ import {
   Activity,
   Database,
   LogOut,
-  User
+  User,
+  Globe2
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -37,7 +38,7 @@ const Sidebar = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-cyber-red/20">
           <div className="flex items-center space-x-3">
-            <Shield className="w-8 h-8 text-cyber-red" />
+            <Globe2 className="w-8 h-8 text-cyber-red" />
             <div>
               <h1 className="text-xl font-bold text-cyber-red">Global</h1>
               <p className="text-xs text-gray-400">Registration System</p>
