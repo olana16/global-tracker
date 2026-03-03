@@ -68,40 +68,80 @@ const Dashboard = () => {
         activeRegistrations: companiesData.success ? companiesData.data.filter(c => c.isActive).length : 0
       })
       
-      // Create recent activity from real data
+      // Create recent activity from real data with actual timestamps
       const activity = []
-      if (companiesData.success && companiesData.data.length > 0) {
-        activity.push({
-          id: 1,
-          type: 'company',
-          name: companiesData.data[0].name,
-          action: 'New company registered',
-          time: '2 min ago',
-          level: 'normal'
-        })
-      }
-      if (peopleData.success && peopleData.data.length > 0) {
-        activity.push({
-          id: 2,
-          type: 'person',
-          name: `${peopleData.data[0].firstName || ''} ${peopleData.data[0].lastName || ''}`.trim() || peopleData.data[0].name,
-          action: 'New person registered',
-          time: '5 min ago',
-          level: 'normal'
-        })
-      }
-      if (countriesData.success && countriesData.data.length > 0) {
-        activity.push({
-          id: 3,
-          type: 'country',
-          name: countriesData.data[0].name,
-          action: 'Country registered',
-          time: '12 min ago',
-          level: 'normal'
+      
+      // Combine all recent items with their timestamps
+      const allItems = []
+      
+      // Add companies with timestamps
+      if (companiesData.success) {
+        companiesData.data.forEach(company => {
+          allItems.push({
+            ...company,
+            type: 'company',
+            name: company.name,
+            action: 'New company registered',
+            timestamp: company.createdAt || new Date()
+          })
         })
       }
       
-      setRecentActivity(activity)
+      // Add people with timestamps
+      if (peopleData.success) {
+        peopleData.data.forEach(person => {
+          allItems.push({
+            ...person,
+            type: 'person',
+            name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.name,
+            action: 'New person registered',
+            timestamp: person.createdAt || new Date()
+          })
+        })
+      }
+      
+      // Add countries with timestamps
+      if (countriesData.success) {
+        countriesData.data.forEach(country => {
+          allItems.push({
+            ...country,
+            type: 'country',
+            name: country.name,
+            action: 'Country registered',
+            timestamp: country.createdAt || new Date()
+          })
+        })
+      }
+      
+      // Sort by timestamp (most recent first) and take top 4
+      const sortedItems = allItems.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 4)
+      
+      // Format time ago for display
+      const formatTimeAgo = (timestamp) => {
+        const now = new Date()
+        const time = new Date(timestamp)
+        const diffMs = now - time
+        const diffMins = Math.floor(diffMs / 60000)
+        const diffHours = Math.floor(diffMins / 60)
+        const diffDays = Math.floor(diffHours / 24)
+        
+        if (diffMins < 1) return 'Just now'
+        if (diffMins < 60) return `${diffMins} min ago`
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+      }
+      
+      // Create activity array with proper time formatting
+      const recentActivity = sortedItems.map((item, index) => ({
+        id: index + 1,
+        type: item.type,
+        name: item.name,
+        action: item.action,
+        time: formatTimeAgo(item.timestamp),
+        level: 'normal'
+      }))
+      
+      setRecentActivity(recentActivity)
       
     } catch (error) {
       console.error('Dashboard error:', error)
