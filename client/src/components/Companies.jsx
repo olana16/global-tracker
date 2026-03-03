@@ -12,6 +12,8 @@ import {
   Building2,
   Globe,
   Users,
+  Menu,
+  FileText,
   Shield,
   AlertTriangle,
   CheckCircle
@@ -645,27 +647,283 @@ const Companies = () => {
     }
   }
 
-  const handlePrintCompany = (company) => {
+  const handlePrintCompany = async (company) => {
     try {
-      // Create a formatted string for printing
+      console.log('=== DEBUG: Print Company ===')
+      console.log('Company object:', company)
+      console.log('Company name:', company.name)
+      console.log('Company ID:', company._id)
+      
+      // Fetch employees associated with this company using company name
+      let employees = []
+      try {
+        console.log('Fetching employees for company:', company.name)
+        
+        // Try multiple approaches to get employees
+        let employeesResponse = null
+        
+        // Method 1: Try peopleAPI.getByCompany
+        try {
+          employeesResponse = await peopleAPI.getByCompany(company.name)
+          console.log('Method 1 - peopleAPI.getByCompany response:', employeesResponse)
+        } catch (error1) {
+          console.log('Method 1 failed:', error1.message)
+        }
+        
+        // Method 2: Try direct fetch call
+        if (!employeesResponse || !employeesResponse.success) {
+          try {
+            const directResponse = await fetch(`/api/v1/people/company/${encodeURIComponent(company.name)}`)
+            employeesResponse = await directResponse.json()
+            console.log('Method 2 - Direct fetch response:', employeesResponse)
+          } catch (error2) {
+            console.log('Method 2 failed:', error2.message)
+          }
+        }
+        
+        // Method 3: Try companiesAPI.getPeople (if it exists)
+        if (!employeesResponse || !employeesResponse.success) {
+          try {
+            employeesResponse = await companiesAPI.getPeople(company._id)
+            console.log('Method 3 - companiesAPI.getPeople response:', employeesResponse)
+          } catch (error3) {
+            console.log('Method 3 failed:', error3.message)
+          }
+        }
+        
+        // Check if we got a successful response
+        if (employeesResponse && employeesResponse.success && employeesResponse.data) {
+          employees = employeesResponse.data
+          console.log('Employees found:', employees.length)
+          console.log('Employee details:', employees)
+        } else {
+          console.log('All methods failed, response:', employeesResponse)
+          alert(`Debug: Could not fetch employees for ${company.name}\nAPI Response: ${JSON.stringify(employeesResponse, null, 2)}`)
+        }
+      } catch (error) {
+        console.error('Error fetching employees for print:', error)
+        alert(`Debug: API Error for ${company.name}: ${error.message}`)
+      }
+      
+      console.log('Final employees array length:', employees.length)
+      
+      // Create a formal HTML document for printing
       const printContent = `
-====================================
-        COMPANY DETAILS
-====================================
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Company Details - ${company.name}</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .company-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin: 5px 0 0 0;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 1px solid #ecf0f1;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .info-label {
+      font-weight: bold;
+      color: #7f8c8d;
+    }
+    .info-value {
+      color: #2c3e50;
+    }
+    .status-active {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .status-inactive {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .employees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .employees-table th,
+    .employees-table td {
+      border: 1px solid #ecf0f1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .employees-table th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .employees-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .no-employees {
+      text-align: center;
+      color: #7f8c8d;
+      font-style: italic;
+      padding: 20px;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+      text-align: center;
+      font-size: 12px;
+      color: #95a5a6;
+    }
+    @media print {
+      body { margin: 0; padding: 15px; }
+      .no-print { display: none; }
+      .employees-table { page-break-inside: auto; }
+      .employees-table tr { page-break-inside: avoid; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="company-name">${company.name}</h1>
+    <p class="subtitle">Company Profile Report</p>
+    <p class="subtitle">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+  </div>
 
-Name: ${company.name}
-Country: ${company.country}
-Industry: ${company.industry}
-Website: ${company.website}
-Founded Year: ${company.foundedYear}
-Status: ${company.isActive ? 'Active' : 'Inactive'}
-Employees: ${company.personCount || 0}
-IP Addresses: ${company.ipAddresses ? company.ipAddresses.join(', ') : 'None'}
-Subdomains: ${company.subdomains ? company.subdomains.join(', ') : 'None'}
-Created At: ${new Date(company.createdAt).toLocaleString()}
-Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.currency}` : 'Not specified'}
+  <div class="section">
+    <h2 class="section-title">Basic Information</h2>
+    <div class="info-grid">
+      <div class="info-label">Company Name:</div>
+      <div class="info-value">${company.name || 'Not specified'}</div>
+      
+      <div class="info-label">Country:</div>
+      <div class="info-value">${company.country || 'Not specified'}</div>
+      
+      <div class="info-label">Industry:</div>
+      <div class="info-value">${company.industry || 'Not specified'}</div>
+      
+      <div class="info-label">Website:</div>
+      <div class="info-value">${company.website || 'Not specified'}</div>
+      
+      <div class="info-label">Founded Year:</div>
+      <div class="info-value">${company.foundedYear || 'Not specified'}</div>
+      
+      <div class="info-label">Status:</div>
+      <div class="info-value ${company.isActive ? 'status-active' : 'status-inactive'}">
+        ${company.isActive ? 'Active' : 'Inactive'}
+      </div>
+    </div>
+  </div>
 
-====================================
+  <div class="section">
+    <h2 class="section-title">Operational Details</h2>
+    <div class="info-grid">
+      <div class="info-label">Number of Employees:</div>
+      <div class="info-value">${employees.length} registered personnel</div>
+      
+      <div class="info-label">Registration Date:</div>
+      <div class="info-value">${company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'Not specified'}</div>
+      
+      <div class="info-label">Last Updated:</div>
+      <div class="info-value">${company.updatedAt ? new Date(company.updatedAt).toLocaleDateString() : 'Not specified'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Employee Information</h2>
+    ${employees.length > 0 ? `
+      <table class="employees-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Position</th>
+            <th>Department</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${employees.map(employee => `
+            <tr>
+              <td>${employee.firstName && employee.lastName ? `${employee.firstName} ${employee.lastName}` : employee.firstName || employee.name || 'N/A'}</td>
+              <td>${employee.email || 'Not specified'}</td>
+              <td>${employee.phone || 'Not specified'}</td>
+              <td>${employee.position || 'Not specified'}</td>
+              <td>${employee.department || 'Not specified'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : `
+      <div class="no-employees">
+        No employees are currently registered for this company.
+      </div>
+    `}
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Technical Information</h2>
+    <div class="info-grid">
+      <div class="info-label">IP Addresses:</div>
+      <div class="info-value">
+        ${company.ipAddresses && company.ipAddresses.length > 0 
+          ? company.ipAddresses.join(', ') 
+          : 'No IP addresses registered'}
+      </div>
+      
+      <div class="info-label">Subdomains:</div>
+      <div class="info-value">
+        ${company.subdomains && company.subdomains.length > 0 
+          ? company.subdomains.join(', ') 
+          : 'No subdomains registered'}
+      </div>
+    </div>
+  </div>
+
+  ${company.revenue && company.revenue.amount ? `
+  <div class="section">
+    <h2 class="section-title">Financial Information</h2>
+    <div class="info-grid">
+      <div class="info-label">Revenue:</div>
+      <div class="info-value">${company.revenue.amount} ${company.revenue.currency || 'USD'}</div>
+    </div>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>This report was generated from the Global Registration Tracker system.</p>
+    <p>For more information, please contact the system administrator.</p>
+  </div>
+</body>
+</html>
       `
       
       // Create a new window for printing
@@ -673,7 +931,13 @@ Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.curren
       printWindow.document.write(printContent)
       printWindow.document.close()
       
-      console.log('Printing company details:', company.name)
+      // Wait for content to load, then print
+      printWindow.onload = function() {
+        printWindow.print()
+      }
+      
+      console.log('=== END DEBUG: Print Company ===')
+      console.log('Printing company details:', company.name, 'Employees found:', employees.length)
     } catch (error) {
       console.error('Error printing company:', error)
       alert('Error printing company details: ' + (error.message || 'Unknown error'))
@@ -682,19 +946,93 @@ Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.curren
 
   const handleExportCompany = async (company, format) => {
     try {
+      // Fetch employees for this company
+      let employees = []
+      try {
+        console.log('Fetching employees for export:', company.name)
+        
+        // Try multiple approaches to get employees
+        let employeesResponse = null
+        
+        // Method 1: Try peopleAPI.getByCompany
+        try {
+          employeesResponse = await peopleAPI.getByCompany(company.name)
+          console.log('Export - Method 1 response:', employeesResponse)
+        } catch (error1) {
+          console.log('Export - Method 1 failed:', error1.message)
+        }
+        
+        // Method 2: Try direct fetch call
+        if (!employeesResponse || !employeesResponse.success) {
+          try {
+            const directResponse = await fetch(`/api/v1/people/company/${encodeURIComponent(company.name)}`)
+            employeesResponse = await directResponse.json()
+            console.log('Export - Method 2 response:', employeesResponse)
+          } catch (error2) {
+            console.log('Export - Method 2 failed:', error2.message)
+          }
+        }
+        
+        // Check if we got a successful response
+        if (employeesResponse && employeesResponse.success && employeesResponse.data) {
+          employees = employeesResponse.data
+          console.log('Export - Employees found:', employees.length)
+        } else {
+          console.log('Export - Could not fetch employees, using empty array')
+        }
+      } catch (error) {
+        console.error('Error fetching employees for export:', error)
+      }
+      
       if (format === 'json') {
-        // Export to JSON
-        const jsonData = JSON.stringify(company, null, 2)
+        // Export to JSON with employees
+        const exportData = {
+          company: {
+            name: company.name,
+            country: company.country,
+            industry: company.industry,
+            website: company.website,
+            foundedYear: company.foundedYear,
+            isActive: company.isActive,
+            ipAddresses: company.ipAddresses || [],
+            subdomains: company.subdomains || [],
+            createdAt: company.createdAt,
+            updatedAt: company.updatedAt,
+            revenue: company.revenue || null
+          },
+          employees: employees.map(emp => ({
+            firstName: emp.firstName,
+            lastName: emp.lastName,
+            email: emp.email,
+            phone: emp.phone,
+            position: emp.position,
+            department: emp.department,
+            city: emp.city,
+            country: emp.country,
+            isActive: emp.isActive,
+            createdAt: emp.createdAt
+          })),
+          summary: {
+            totalEmployees: employees.length,
+            exportDate: new Date().toISOString(),
+            exportedBy: 'Global Registration Tracker'
+          }
+        }
+        
+        const jsonData = JSON.stringify(exportData, null, 2)
         const blob = new Blob([jsonData], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
         link.download = `${company.name.replace(/\s+/g, '_')}_company_data.json`
         link.click()
+        URL.revokeObjectURL(url)
+        
       } else if (format === 'csv') {
-        // Export to CSV
+        // Export to CSV with employees
+        const csvHeaders = ['Name', 'Country', 'Industry', 'Website', 'Founded Year', 'Status', 'Employees', 'IP Addresses', 'Subdomains', 'Created At']
         const csvContent = [
-          ['Name', 'Country', 'Industry', 'Website', 'Founded Year', 'Status', 'Employees', 'IP Addresses', 'Subdomains', 'Created At'],
+          csvHeaders,
           [
             company.name,
             company.country,
@@ -702,12 +1040,33 @@ Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.curren
             company.website,
             company.foundedYear,
             company.isActive ? 'Active' : 'Inactive',
-            company.personCount || 0,
+            employees.length,
             company.ipAddresses ? company.ipAddresses.join('; ') : '',
             company.subdomains ? company.subdomains.join('; ') : '',
             new Date(company.createdAt).toLocaleString()
           ]
         ]
+        
+        // Add employee details if there are employees
+        if (employees.length > 0) {
+          csvContent.push([]) // Empty row separator
+          csvContent.push(['EMPLOYEES']) // Section header
+          csvContent.push(['First Name', 'Last Name', 'Email', 'Phone', 'Position', 'Department', 'City', 'Country', 'Status'])
+          
+          employees.forEach(emp => {
+            csvContent.push([
+              emp.firstName || '',
+              emp.lastName || '',
+              emp.email || '',
+              emp.phone || '',
+              emp.position || '',
+              emp.department || '',
+              emp.city || '',
+              emp.country || '',
+              emp.isActive ? 'Active' : 'Inactive'
+            ])
+          })
+        }
         
         const csvString = csvContent.map(row => row.join(',')).join('\n')
         
@@ -717,9 +1076,237 @@ Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.curren
         csvLink.href = csvUrl
         csvLink.download = `${company.name.replace(/\s+/g, '_')}_company_data.csv`
         csvLink.click()
+        URL.revokeObjectURL(csvUrl)
+        
+      } else if (format === 'pdf') {
+        // Export to PDF with employees
+        const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Company Report - ${company.name}</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .company-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin: 5px 0 0 0;
+    }
+    .section {
+      margin-bottom: 25px;
+      page-break-inside: avoid;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 1px solid #ecf0f1;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .info-label {
+      font-weight: bold;
+      color: #7f8c8d;
+    }
+    .info-value {
+      color: #2c3e50;
+    }
+    .status-active {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .status-inactive {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .employees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .employees-table th,
+    .employees-table td {
+      border: 1px solid #ecf0f1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .employees-table th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .employees-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+      text-align: center;
+      font-size: 12px;
+      color: #95a5a6;
+    }
+    @media print {
+      body { margin: 0; padding: 15px; }
+      .section { page-break-inside: avoid; }
+      .employees-table { page-break-inside: auto; }
+      .employees-table tr { page-break-inside: avoid; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="company-name">${company.name}</h1>
+    <p class="subtitle">Company Profile Report</p>
+    <p class="subtitle">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Basic Information</h2>
+    <div class="info-grid">
+      <div class="info-label">Company Name:</div>
+      <div class="info-value">${company.name || 'Not specified'}</div>
+      
+      <div class="info-label">Country:</div>
+      <div class="info-value">${company.country || 'Not specified'}</div>
+      
+      <div class="info-label">Industry:</div>
+      <div class="info-value">${company.industry || 'Not specified'}</div>
+      
+      <div class="info-label">Website:</div>
+      <div class="info-value">${company.website || 'Not specified'}</div>
+      
+      <div class="info-label">Founded Year:</div>
+      <div class="info-value">${company.foundedYear || 'Not specified'}</div>
+      
+      <div class="info-label">Status:</div>
+      <div class="info-value ${company.isActive ? 'status-active' : 'status-inactive'}">
+        ${company.isActive ? 'Active' : 'Inactive'}
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Operational Details</h2>
+    <div class="info-grid">
+      <div class="info-label">Number of Employees:</div>
+      <div class="info-value">${employees.length} registered personnel</div>
+      
+      <div class="info-label">Registration Date:</div>
+      <div class="info-value">${company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'Not specified'}</div>
+      
+      <div class="info-label">Last Updated:</div>
+      <div class="info-value">${company.updatedAt ? new Date(company.updatedAt).toLocaleDateString() : 'Not specified'}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Employee Information</h2>
+    ${employees.length > 0 ? `
+      <table class="employees-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Position</th>
+            <th>Department</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${employees.map(employee => `
+            <tr>
+              <td>${employee.firstName && employee.lastName ? `${employee.firstName} ${employee.lastName}` : employee.firstName || employee.name || 'N/A'}</td>
+              <td>${employee.email || 'Not specified'}</td>
+              <td>${employee.phone || 'Not specified'}</td>
+              <td>${employee.position || 'Not specified'}</td>
+              <td>${employee.department || 'Not specified'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : `
+      <p style="text-align: center; color: #7f8c8d; font-style: italic;">No employees are currently registered for this company.</p>
+    `}
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Technical Information</h2>
+    <div class="info-grid">
+      <div class="info-label">IP Addresses:</div>
+      <div class="info-value">
+        ${company.ipAddresses && company.ipAddresses.length > 0 
+          ? company.ipAddresses.join(', ') 
+          : 'No IP addresses registered'}
+      </div>
+      
+      <div class="info-label">Subdomains:</div>
+      <div class="info-value">
+        ${company.subdomains && company.subdomains.length > 0 
+          ? company.subdomains.join(', ') 
+          : 'No subdomains registered'}
+      </div>
+    </div>
+  </div>
+
+  ${company.revenue && company.revenue.amount ? `
+  <div class="section">
+    <h2 class="section-title">Financial Information</h2>
+    <div class="info-grid">
+      <div class="info-label">Revenue:</div>
+      <div class="info-value">${company.revenue.amount} ${company.revenue.currency || 'USD'}</div>
+    </div>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    <p>This report was generated from the Global Registration Tracker system.</p>
+    <p>For more information, please contact the system administrator.</p>
+  </div>
+</body>
+</html>
+        `
+        
+        // Create a new window for PDF generation
+        const printWindow = window.open('', '_blank')
+        printWindow.document.write(printContent)
+        printWindow.document.close()
+        
+        // Wait for content to load, then trigger print dialog
+        printWindow.onload = function() {
+          printWindow.print()
+          // Close the window after printing
+          setTimeout(() => {
+            printWindow.close()
+          }, 1000)
+        }
       }
       
-      console.log(`Exported company data as ${format.toUpperCase()}:`, company.name)
+      console.log(`Exported company data as ${format.toUpperCase()}:`, company.name, `Employees: ${employees.length}`)
     } catch (error) {
       console.error('Error exporting company:', error)
       alert('Error exporting company data: ' + (error.message || 'Unknown error'))
@@ -1288,14 +1875,28 @@ Revenue: ${company.revenue ? `${company.revenue.amount} ${company.revenue.curren
               <h2 className="text-xl font-bold text-cyber-blue mb-4">Company Details</h2>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => {
-                    handleExportCompany(selectedCompany, 'json')
-                    handleExportCompany(selectedCompany, 'csv')
-                  }}
-                  className="text-cyber-red hover:text-cyber-yellow transition-colors"
-                  title="Export Company Data (JSON and CSV)"
+                  onClick={() => handleExportCompany(selectedCompany, 'json')}
+                  className="flex items-center space-x-1 px-3 py-2 bg-cyber-red text-white rounded hover:bg-cyber-red/80 transition-colors text-sm"
+                  title="Export as JSON"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4" />
+                  <span>JSON</span>
+                </button>
+                <button
+                  onClick={() => handleExportCompany(selectedCompany, 'csv')}
+                  className="flex items-center space-x-1 px-3 py-2 bg-cyber-blue text-white rounded hover:bg-cyber-blue/80 transition-colors text-sm"
+                  title="Export as CSV"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>CSV</span>
+                </button>
+                <button
+                  onClick={() => handleExportCompany(selectedCompany, 'pdf')}
+                  className="flex items-center space-x-1 px-3 py-2 bg-cyber-green text-white rounded hover:bg-cyber-green/80 transition-colors text-sm"
+                  title="Export as PDF"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>PDF</span>
                 </button>
                 <button
                   onClick={() => handlePrintCompany(selectedCompany)}
