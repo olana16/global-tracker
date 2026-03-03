@@ -529,7 +529,7 @@ const People = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Email</p>
-                    <p className="text-gray-100">{selectedPerson.email}</p>
+                    <p className="text-gray-100 break-words">{selectedPerson.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Phone</p>
