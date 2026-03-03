@@ -523,7 +523,9 @@ const People = () => {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-400">Name</p>
-                    <p className="text-gray-100">{selectedPerson.name}</p>
+                    <p className="text-gray-100">
+                      {selectedPerson.firstName && selectedPerson.lastName ? `${selectedPerson.firstName} ${selectedPerson.lastName}` : selectedPerson.firstName || selectedPerson.name || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Email</p>

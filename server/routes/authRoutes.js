@@ -9,7 +9,9 @@ const {
   logout,
   updateDetails,
   userPhotoUpload,
-  changePassword
+  changePassword,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/authController');
 const rateLimit = require('express-rate-limit');
 
@@ -47,5 +49,9 @@ router.post('/change-password', protect, changePasswordLimiter, [
   check('currentPassword', 'Current password is required').not().isEmpty(),
   check('newPassword', 'New password must be at least 8 characters').isLength({ min: 8 })
 ], changePassword);
+
+// Forgot password and reset password routes
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

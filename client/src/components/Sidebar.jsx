@@ -54,7 +54,7 @@ const Sidebar = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-100 truncate">
-                {user?.name || 'User'}
+                {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.name || 'User'}
               </p>
               <p className="text-xs text-gray-400 truncate">
                 {user?.email || 'user@example.com'}

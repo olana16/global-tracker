@@ -4,6 +4,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const fs = require('fs');
 const util = require('util');
+const crypto = require('crypto');
 
 // @desc    Register user
 // @route   POST /api/v1/auth/register
@@ -284,6 +285,107 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
   await user.save();
 
   res.status(200).json({ success: true, message: 'Password changed successfully' });
+});
+
+// @desc    Forgot password
+// @route   POST /api/v1/auth/forgot-password
+// @access  Public
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+
+  console.log('Forgot password request for email:', email);
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      console.log('No user found with email:', email);
+      // For security reasons, don't reveal if email exists or not
+      return res.status(200).json({
+        success: true,
+        message: 'Password reset instructions sent to your email'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Set expire time (10 minutes)
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    await user.save({ validateBeforeSave: false });
+
+    console.log('Reset token generated for user:', user._id);
+
+    // For now, we'll just return success with the token in development
+    // In production, you would send an email with the reset link
+    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset instructions sent to your email',
+      // Only include token in development for testing
+      ...(process.env.NODE_ENV === 'development' && { 
+        resetToken,
+        resetUrl 
+      })
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return next(new ErrorResponse('Failed to process forgot password request', 500));
+  }
+});
+
+// @desc    Reset password
+// @route   POST /api/v1/auth/reset-password
+// @access  Public
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  const { token, password } = req.body;
+
+  console.log('Reset password request with token');
+
+  try {
+    // Hash token to compare with database
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      console.log('Invalid or expired reset token');
+      return next(new ErrorResponse('Invalid or expired reset token', 400));
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    console.log('Password reset successful for user:', user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return next(new ErrorResponse('Failed to reset password', 500));
+  }
 });
 
 // Get token from model, create cookie and send response

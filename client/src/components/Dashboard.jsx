@@ -17,8 +17,10 @@ import { dashboardAPI } from '../services/api'
 import { companiesAPI } from '../services/api'
 import { countriesAPI } from '../services/api'
 import { peopleAPI } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const Dashboard = () => {
+  const { user } = useAuth()
   const [stats, setStats] = useState({
     totalCompanies: 0,
     totalCountries: 0,
@@ -330,7 +332,9 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-cyber-red mb-2">Registration Dashboard</h1>
+          <h1 className="text-3xl font-bold text-cyber-red mb-2">
+            Welcome back, {user?.firstName && user?.lastName ? `${user.firstName}` : user?.firstName || user?.name || 'User'}!
+          </h1>
           <p className="text-gray-400">Manage and monitor registration data</p>
         </div>
         <div className="flex items-center space-x-4">
