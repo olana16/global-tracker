@@ -9,12 +9,12 @@ export default {
       colors: {
         'cyber-dark': '#0a0e27',
         'cyber-darker': '#060818',
-        'cyber-blue': '#ef4444',
-        'cyber-green': '#ef4444',
-        'cyber-purple': '#ef4444',
-        'cyber-pink': '#ef4444',
-        'cyber-yellow': '#ef4444',
-        'cyber-orange': '#ef4444',
+        'cyber-blue': '#3b82f6',
+        'cyber-green': '#10b981',
+        'cyber-purple': '#8b5cf6',
+        'cyber-pink': '#ec4899',
+        'cyber-yellow': '#f59e0b',
+        'cyber-orange': '#f97316',
         'cyber-red': '#ef4444'
       },
       backgroundImage: {
@@ -23,12 +23,13 @@ export default {
       },
       boxShadow: {
         'cyber': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'cyber-green': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'cyber-purple': '0 0 20px rgba(239, 68, 68, 0.3)',
+        'cyber-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'cyber-green': '0 0 20px rgba(16, 185, 129, 0.3)',
+        'cyber-purple': '0 0 20px rgba(139, 92, 246, 0.3)',
         'cyber-red': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'cyber-orange': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'cyber-yellow': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'cyber-pink': '0 0 20px rgba(239, 68, 68, 0.3)',
+        'cyber-orange': '0 0 20px rgba(249, 115, 22, 0.3)',
+        'cyber-yellow': '0 0 20px rgba(245, 158, 11, 0.3)',
+        'cyber-pink': '0 0 20px rgba(236, 72, 153, 0.3)',
       },
       animation: {
         'pulse-cyber': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

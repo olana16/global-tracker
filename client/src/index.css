@@ -27,11 +27,11 @@
   }
   
   .cyber-button-green {
-    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber-red transition-all duration-300;
+    @apply px-4 py-2 bg-cyber-green/20 border border-cyber-green/50 text-cyber-green rounded hover:bg-cyber-green/30 hover:shadow-cyber-green transition-all duration-300;
   }
   
   .cyber-button-purple {
-    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber transition-all duration-300;
+    @apply px-4 py-2 bg-cyber-purple/20 border border-cyber-purple/50 text-cyber-purple rounded hover:bg-cyber-purple/30 hover:shadow-cyber-purple transition-all duration-300;
   }
   
   .cyber-input {

@@ -1842,6 +1842,9 @@ const Companies = () => {
                     type="checkbox"
                     name="isActive"
                     defaultChecked={true}
+                    ref={(input) => {
+                      if (input) form.isActive = input
+                    }}
                     className="h-4 w-4 bg-cyber-dark border-cyber-blue/30 rounded text-cyber-blue focus:ring-cyber-blue focus:ring-2"
                   />
                   <label className="ml-2 text-sm font-medium text-gray-300">Active</label>
