@@ -142,7 +142,7 @@ const Countries = () => {
 
   const handleEditCountry = (country) => {
     setSelectedCountry(country)
-    setShowAddModal(true)
+    setShowAddModal(false)
   }
 
   const handleDeleteCountry = async (id) => {

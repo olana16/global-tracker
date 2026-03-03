@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { 
   Search, 
   Plus, 
@@ -21,6 +21,7 @@ import {
 import { companiesAPI, countriesAPI } from '../services/api'
 
 const Companies = () => {
+  const formRef = useRef(null)
   const [companies, setCompanies] = useState([])
   const [countries, setCountries] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -645,6 +646,11 @@ const Companies = () => {
       setSelectedCompany(company)
       console.log('Viewing company (fallback):', company)
     }
+  }
+
+  const handleEditCompany = (company) => {
+    setSelectedCompany(company)
+    setShowAddModal(false)
   }
 
   const handlePrintCompany = async (company) => {
@@ -1556,7 +1562,7 @@ const Companies = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="cyber-card p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-cyber-blue mb-4">Add New Company</h2>
-            <form onSubmit={(e) => {
+            <form ref={formRef} onSubmit={(e) => {
               e.preventDefault()
               const form = e.target
               const companyData = {
@@ -1842,9 +1848,6 @@ const Companies = () => {
                     type="checkbox"
                     name="isActive"
                     defaultChecked={true}
-                    ref={(input) => {
-                      if (input) form.isActive = input
-                    }}
                     className="h-4 w-4 bg-cyber-dark border-cyber-blue/30 rounded text-cyber-blue focus:ring-cyber-blue focus:ring-2"
                   />
                   <label className="ml-2 text-sm font-medium text-gray-300">Active</label>
