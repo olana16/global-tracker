@@ -39,34 +39,94 @@ const Dashboard = () => {
     try {
       setLoading(true)
       
+      console.log('Fetching dashboard data for user:', user) // Debug log
+      console.log('User role:', user?.role) // Debug log
+      console.log('User assigned companies:', user?.assignedCompanies) // Debug log
+      
       // Fetch all real data from backend
+      console.log('Starting API calls...') // Debug log
       const [companiesData, countriesData, peopleData] = await Promise.all([
         companiesAPI.getAll(),
         countriesAPI.getAll(),
         peopleAPI.getAll({ limit: 1000 })
       ])
       
+      console.log('API calls completed') // Debug log
+      
+      console.log('Companies response:', companiesData) // Debug log
+      console.log('Countries response:', countriesData) // Debug log
+      console.log('People response:', peopleData) // Debug log
+      
       // Calculate real counts from actual backend data
       let totalSubdomains = 0
       let totalIPs = 0
+      let totalPeople = 0
+      let totalCountries = 0
       
       if (companiesData.success) {
+        console.log('Companies data length:', companiesData.data.length) // Debug log
+        console.log('Companies data:', companiesData.data) // Debug log
         companiesData.data.forEach(company => {
+          console.log('Processing company:', company.name) // Debug log
+          console.log('Company subdomains:', company.subdomains) // Debug log
+          console.log('Company IPs:', company.ips) // Debug log
+          console.log('Company ipAddresses:', company.ipAddresses) // Debug log
+          console.log('Company country:', company.country) // Debug log
+          
           // Count subdomains and IPs from actual company data
           totalSubdomains += company.subdomains?.length || 1
-          totalIPs += company.ips?.length || 1
+          totalIPs += company.ipAddresses?.length || company.ips?.length || 0
+          
+          console.log('Company subdomains count:', company.subdomains?.length || 1) // Debug log
+          console.log('Company IPs count:', company.ipAddresses?.length || company.ips?.length || 0) // Debug log
+          console.log('Running totals - Subdomains:', totalSubdomains, 'IPs:', totalIPs) // Debug log
         })
+        
+        // Calculate people count based on user role
+        console.log('Checking user role for people/countries calculation:', user?.role) // Debug log
+        
+        if (user?.role === 'pentester') {
+          console.log('Pentester role detected - calculating restricted counts') // Debug log
+          // For pentesters, only count people from assigned companies
+          const assignedCompanyNames = companiesData.data.map(company => company.name)
+          console.log('Pentester assigned company names:', assignedCompanyNames) // Debug log
+          totalPeople = peopleData.success ? peopleData.data.filter(person => 
+            assignedCompanyNames.includes(person.company)
+          ).length : 0
+          console.log('Pentester people count:', totalPeople) // Debug log
+          
+          // For pentesters, only count unique countries of assigned companies
+          const assignedCountries = new Set()
+          companiesData.data.forEach(company => {
+            if (company.country) {
+              assignedCountries.add(company.country)
+            }
+          })
+          totalCountries = assignedCountries.size
+          console.log('Pentester assigned countries:', Array.from(assignedCountries)) // Debug log
+          console.log('Pentester countries count:', totalCountries) // Debug log
+        } else {
+          console.log('Admin role detected - calculating full counts') // Debug log
+          // For admins, count all people and all countries
+          totalPeople = peopleData.success ? peopleData.data.length : 0
+          totalCountries = countriesData.success ? countriesData.data.length : 0
+          console.log('Admin people count:', totalPeople) // Debug log
+          console.log('Admin countries count:', totalCountries) // Debug log
+        }
       }
       
       // Set real stats from backend data
-      setStats({
+      const newStats = {
         totalCompanies: companiesData.success ? companiesData.data.length : 0,
-        totalCountries: countriesData.success ? countriesData.data.length : 0,
-        totalPeople: peopleData.success ? peopleData.data.length : 0,
+        totalCountries: totalCountries,
+        totalPeople: totalPeople,
         totalSubdomains: totalSubdomains,
         totalIPs: totalIPs,
         activeRegistrations: companiesData.success ? companiesData.data.filter(c => c.isActive).length : 0
-      })
+      }
+      
+      console.log('New stats being set:', newStats) // Debug log
+      setStats(newStats)
       
       // Create recent activity from real data with actual timestamps
       const activity = []

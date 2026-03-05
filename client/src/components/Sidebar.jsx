@@ -11,7 +11,8 @@ import {
   Database,
   LogOut,
   User,
-  Globe2
+  Globe2,
+  Settings
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -25,6 +26,8 @@ const Sidebar = () => {
     { path: '/companies', icon: Building2, label: 'Companies' },
     { path: '/countries', icon: Globe, label: 'Countries' },
     { path: '/people', icon: Users, label: 'People' },
+    { path: '/user-management', icon: Users, label: 'Pentester Management' },
+    { path: '/profile', icon: Settings, label: 'Profile' },
   ]
 
   const handleLogout = async () => {
@@ -49,9 +52,21 @@ const Sidebar = () => {
         {/* User Info */}
         <div className="p-4 border-b border-cyber-red/20">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-cyber-red/20 rounded-full">
-              <User className="w-5 h-5 text-cyber-red" />
+            {/* User Profile Photo */}
+            <div className="relative">
+              {user?.photo && user.photo !== 'no-photo.jpg' ? (
+                <img
+                  src={`http://localhost:5000/uploads/${user.photo}`}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-cyber-red/30"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-cyber-red/20 flex items-center justify-center border-2 border-cyber-red/30">
+                  <User className="w-5 h-5 text-cyber-red" />
+                </div>
+              )}
             </div>
+            
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-100 truncate">
                 {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.name || 'User'}

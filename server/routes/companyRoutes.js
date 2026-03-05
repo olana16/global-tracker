@@ -12,10 +12,10 @@ const exportLimiter = rateLimit({
 });
 
 // Get all companies
-router.get('/', companyController.getCompanies);
+router.get('/', protect, companyController.getCompanies);
 
 // Get a single company by ID
-router.get('/:id', companyController.getCompany);
+router.get('/:id', protect, companyController.getCompany);
 
 // Create a new company
 router.post(

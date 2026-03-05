@@ -18,9 +18,11 @@ import {
   MapPin,
   User
 } from 'lucide-react'
-import { peopleAPI } from '../services/api'
+import { peopleAPI, companiesAPI } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const People = () => {
+  const { user } = useAuth()
   const [people, setPeople] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPerson, setSelectedPerson] = useState(null)
@@ -32,7 +34,47 @@ const People = () => {
     const fetchPeople = async () => {
       try {
         setLoading(true)
-        const response = await peopleAPI.getAll({ limit: 1000 }) // Get all people
+        console.log('Fetching people for user:', user) // Debug log
+        console.log('User role:', user?.role) // Debug log
+        
+        let response;
+        
+        if (user?.role === 'pentester') {
+          // For pentesters, get assigned companies first, then filter people
+          console.log('Pentester access - getting assigned companies first') // Debug log
+          const companiesResponse = await companiesAPI.getAll()
+          
+          if (companiesResponse.success) {
+            const assignedCompanyNames = companiesResponse.data.map(company => company.name)
+            console.log('Pentester assigned company names:', assignedCompanyNames) // Debug log
+            
+            // Get all people, then filter by assigned companies
+            const allPeopleResponse = await peopleAPI.getAll({ limit: 1000 })
+            console.log('All people response:', allPeopleResponse) // Debug log
+            
+            if (allPeopleResponse.success) {
+              // Filter people by assigned companies
+              const filteredPeople = allPeopleResponse.data.filter(person => 
+                assignedCompanyNames.includes(person.company)
+              )
+              console.log('Filtered people count:', filteredPeople.length) // Debug log
+              console.log('Filtered people:', filteredPeople) // Debug log
+              
+              response = {
+                success: true,
+                data: filteredPeople
+              }
+            } else {
+              response = allPeopleResponse
+            }
+          } else {
+            response = companiesResponse
+          }
+        } else {
+          // Admin can see all people
+          console.log('Admin access - getting all people') // Debug log
+          response = await peopleAPI.getAll({ limit: 1000 })
+        }
         
         console.log('People API response:', response) // Debug log
         

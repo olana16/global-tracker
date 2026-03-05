@@ -10,6 +10,8 @@ import Dashboard from './components/Dashboard'
 import Companies from './components/Companies'
 import Countries from './components/Countries'
 import People from './components/People'
+import UserManagement from './components/UserManagement'
+import Profile from './components/Profile'
 import './index.css'
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
                       <Route path="/companies" element={<Companies />} />
                       <Route path="/countries" element={<Countries />} />
                       <Route path="/people" element={<People />} />
+                      <Route path="/user-management" element={<UserManagement />} />
+                      <Route path="/profile" element={<Profile />} />
                     </Routes>
                   </main>
                 </div>

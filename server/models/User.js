@@ -24,8 +24,17 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'pentester'],
     default: 'user'
+  },
+  assignedCompanies: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company'
+  }],
+  permissions: {
+    type: String,
+    enum: ['read', 'read_write', 'full_access'],
+    default: 'read'
   },
   password: {
     type: String,
