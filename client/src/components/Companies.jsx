@@ -1534,6 +1534,13 @@ const Companies = () => {
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => handleEditCompany(company)}
+                          className="text-cyber-red hover:text-cyber-yellow transition-colors"
+                          title="Edit Company"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handlePrintCompany(company)}
                           className="text-cyber-red hover:text-cyber-yellow transition-colors"
                           title="Print Company Details"

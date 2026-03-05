@@ -9,12 +9,12 @@ export default {
       colors: {
         'cyber-dark': '#0a0e27',
         'cyber-darker': '#060818',
-        'cyber-blue': '#3b82f6',
-        'cyber-green': '#10b981',
-        'cyber-purple': '#8b5cf6',
-        'cyber-pink': '#ec4899',
-        'cyber-yellow': '#f59e0b',
-        'cyber-orange': '#f97316',
+         'cyber-blue': '#ef4444',
+        'cyber-green': '#ef4444',
+        'cyber-purple': '#ef4444',
+        'cyber-pink': '#ef4444',
+        'cyber-yellow': '#ef4444',
+        'cyber-orange': '#ef4444',
         'cyber-red': '#ef4444'
       },
       backgroundImage: {

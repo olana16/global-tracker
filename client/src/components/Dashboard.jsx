@@ -493,7 +493,7 @@ const Dashboard = () => {
 
         {/* Other Data */}
         <div className="cyber-card p-6">
-          <h2 className="text-xl font-semibold text-cyber-red mb-6">Data from Backend</h2>
+          <h2 className="text-xl font-semibold text-cyber-red mb-6">Data</h2>
           <div className="space-y-4">
             <div className="p-4 bg-cyber-green/10 border border-cyber-green/30 rounded">
               <div className="flex items-center justify-between mb-2">

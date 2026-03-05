@@ -11,6 +11,125 @@
       radial-gradient(circle at 40% 20%, rgba(239, 68, 68, 0.1) 0%, transparent 50%);
     background-attachment: fixed;
   }
+
+  /* Force all buttons and links to use cyber red theme */
+  button, a {
+    color: #ef4444 !important;
+  }
+
+  button:hover, a:hover {
+    color: #ffffff !important;
+  }
+
+  /* Force all text colors to cyber red variants */
+  .text-cyber-red {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-blue {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-green {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-purple {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-pink {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-yellow {
+    color: #ef4444 !important;
+  }
+
+  .text-cyber-orange {
+    color: #ef4444 !important;
+  }
+
+  /* Force all SVG icons to use cyber red */
+  svg {
+    color: #ef4444 !important;
+  }
+
+  /* Force all Lucide icons to use cyber red */
+  .lucide-react {
+    color: #ef4444 !important;
+  }
+
+  /* Table row hover with red glow */
+  table tr:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  /* Table cell hover effects */
+  table td:hover {
+    color: #ffffff !important;
+  }
+
+  /* Enhanced table row hover for specific tables */
+  .hover-bg-cyber-blue-5:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  /* Table container hover effects */
+  .table-container tr:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+    transform: translateY(-2px) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  /* Additional table hover effects */
+  tbody tr:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  tbody tr:hover td {
+    color: #ffffff !important;
+  }
+
+  /* Import button override - force cyber red */
+  button[onClick*="handleFileUpload"],
+  button[onClick*="handleImport"],
+  .import-button,
+  .upload-button {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: #ef4444 !important;
+  }
+
+  button[onClick*="handleFileUpload"]:hover,
+  button[onClick*="handleImport"]:hover,
+  .import-button:hover,
+  .upload-button:hover {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+  }
+
+  /* Dashboard specific overrides */
+  .dashboard-import-button {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    color: #ef4444 !important;
+  }
+
+  .dashboard-import-button:hover {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+  }
 }
 
 @layer components {
@@ -26,13 +145,14 @@
     @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber transition-all duration-300;
   }
   
-  .cyber-button-green {
-    @apply px-4 py-2 bg-cyber-green/20 border border-cyber-green/50 text-cyber-green rounded hover:bg-cyber-green/30 hover:shadow-cyber-green transition-all duration-300;
+   .cyber-button-green {
+    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber-red transition-all duration-300;
   }
   
   .cyber-button-purple {
-    @apply px-4 py-2 bg-cyber-purple/20 border border-cyber-purple/50 text-cyber-purple rounded hover:bg-cyber-purple/30 hover:shadow-cyber-purple transition-all duration-300;
+    @apply px-4 py-2 bg-cyber-red/20 border border-cyber-red/50 text-cyber-red rounded hover:bg-cyber-red/30 hover:shadow-cyber transition-all duration-300;
   }
+  
   
   .cyber-input {
     @apply w-full px-3 py-2 bg-cyber-dark/80 border border-cyber-red/30 rounded text-gray-100 placeholder-gray-500 focus:border-cyber-red focus:outline-none focus:ring-1 focus:ring-cyber-red;
