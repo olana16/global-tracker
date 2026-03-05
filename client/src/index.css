@@ -12,13 +12,22 @@
     background-attachment: fixed;
   }
 
-  /* Force all buttons and links to use cyber red theme */
-  button, a {
+  /* Remove universal button color override to allow text visibility */
+  a {
     color: #ef4444 !important;
   }
 
   button:hover, a:hover {
     color: #ffffff !important;
+  }
+
+  /* Ensure button text is always visible with proper contrast */
+  .cyber-button, .cyber-button-green, .cyber-button-purple {
+    color: #ffffff !important;  /* White text for visibility */
+  }
+
+  .cyber-button:hover, .cyber-button-green:hover, .cyber-button-purple:hover {
+    color: #ef4444 !important;  /* Red text on hover */
   }
 
   /* Force all text colors to cyber red variants */
@@ -53,6 +62,15 @@
   /* Force all SVG icons to use cyber red */
   svg {
     color: #ef4444 !important;
+  }
+
+  /* Ensure button SVG icons are always visible */
+  .cyber-button svg, .cyber-button-green svg, .cyber-button-purple svg {
+    color: #ffffff !important;  /* White icons in normal state */
+  }
+
+  .cyber-button:hover svg, .cyber-button-green:hover svg, .cyber-button-purple:hover svg {
+    color: #ef4444 !important;  /* Red icons on hover */
   }
 
   /* Force all Lucide icons to use cyber red */
