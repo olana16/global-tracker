@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Use relative URL since Vite proxy will handle the routing
-const API_BASE_URL = '/api/v1'
+// Use direct backend URL to avoid proxy issues
+const API_BASE_URL = 'http://localhost:5000/api/v1'
 
 console.log('API Base URL:', API_BASE_URL) // Debug log
 
@@ -52,7 +52,14 @@ export const authAPI = {
   },
   
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData)
+    // Handle FormData for file uploads
+    const config = {
+      headers: {
+        'Content-Type': userData instanceof FormData ? 'multipart/form-data' : 'application/json',
+      },
+    }
+    
+    const response = await api.post('/auth/register', userData, config)
     console.log('Register API response:', response) // Debug log
     return response.data
   },
@@ -120,6 +127,26 @@ export const companiesAPI = {
   
   getPeople: async (id) => {
     const response = await api.get(`/companies/${id}/people`)
+    return response.data
+  },
+
+  addIpAddress: async (id, ipAddress) => {
+    const response = await api.post(`/companies/${id}/ips`, { ipAddress })
+    return response.data
+  },
+
+  removeIpAddress: async (id, ip) => {
+    const response = await api.delete(`/companies/${id}/ips/${encodeURIComponent(ip)}`)
+    return response.data
+  },
+
+  addSubdomain: async (id, subdomain) => {
+    const response = await api.post(`/companies/${id}/subdomains`, { subdomain })
+    return response.data
+  },
+
+  removeSubdomain: async (id, subdomain) => {
+    const response = await api.delete(`/companies/${id}/subdomains/${encodeURIComponent(subdomain.toLowerCase())}`)
     return response.data
   }
 }
@@ -201,6 +228,67 @@ export const peopleAPI = {
   
   updateStatus: async (id, status) => {
     const response = await api.patch(`/people/${id}/status`, { status })
+    return response.data
+  }
+}
+
+// User API calls
+export const userAPI = {
+  getAllUsers: async () => {
+    const response = await api.get('/users')
+    return response.data
+  },
+
+  getUserById: async (id) => {
+    const response = await api.get(`/users/${id}`)
+    return response.data
+  },
+
+  createUser: async (userData) => {
+    console.log('API createUser called with:', userData) // Debug log
+    // Handle FormData for file uploads
+    const config = {
+      headers: {
+        'Content-Type': userData instanceof FormData ? 'multipart/form-data' : 'application/json',
+      },
+    }
+    const response = await api.post('/users', userData, config)
+    console.log('API createUser response:', response.data) // Debug log
+    return response.data
+  },
+
+  updateUser: async (id, userData) => {
+    const response = await api.put(`/users/${id}`, userData)
+    return response.data
+  },
+
+  assignCompanies: async (userId, companyIds) => {
+    console.log('API assignCompanies called with userId:', userId) // Debug log
+    console.log('API assignCompanies called with companyIds:', companyIds) // Debug log
+    const response = await api.put(`/users/${userId}/assign-companies`, { companyIds })
+    console.log('API assignCompanies response:', response.data) // Debug log
+    return response.data
+  },
+
+  updatePermissions: async (userId, permissions) => {
+    const response = await api.put(`/users/${userId}/permissions`, { permissions })
+    return response.data
+  },
+
+  updateProfile: async (profileData) => {
+    // Handle FormData for file uploads
+    const config = {
+      headers: {
+        'Content-Type': profileData instanceof FormData ? 'multipart/form-data' : 'application/json',
+      },
+    }
+    
+    const response = await api.put('/users/profile', profileData, config)
+    return response.data
+  },
+
+  deleteUser: async (id) => {
+    const response = await api.delete(`/users/${id}`)
     return response.data
   }
 }

@@ -10,21 +10,73 @@ const crypto = require('crypto');
 // @route   POST /api/v1/auth/register
 // @access  Public
 exports.register = asyncHandler(async (req, res, next) => {
+  console.log('Register request received') // Debug log
+  console.log('Request body:', req.body) // Debug log
+  console.log('Request files:', req.files) // Debug log
+  
   const { firstName, lastName, email, password, role } = req.body;
 
   console.log('Register attempt:', { firstName, lastName, email, role });
 
   try {
+    // Handle photo upload
+    let photoPath = 'no-photo.jpg';
+    
+    if (req.files && req.files.photo) {
+      const photo = req.files.photo;
+      
+      console.log('Photo file received:', photo.name) // Debug log
+      
+      // Validate file type
+      if (!photo.mimetype.startsWith('image/')) {
+        return next(new ErrorResponse('Please upload an image file', 400));
+      }
+      
+      // Validate file size (max 5MB)
+      if (photo.size > 5 * 1024 * 1024) {
+        return next(new ErrorResponse('Photo size should be less than 5MB', 400));
+      }
+      
+      // Generate unique filename
+      photo.name = `user_${Date.now()}_${photo.name.replace(/\s+/g, '_')}`;
+      
+      console.log('Generated photo filename:', photo.name) // Debug log
+      
+      // Move file to upload directory synchronously
+      try {
+        await new Promise((resolve, reject) => {
+          photo.mv(`${process.env.FILE_UPLOAD_PATH}/${photo.name}`, (err) => {
+            if (err) {
+              console.error('File upload error:', err);
+              reject(err);
+            } else {
+              console.log('Photo uploaded successfully:', photo.name) // Debug log
+              resolve();
+            }
+          });
+        });
+        
+        photoPath = photo.name;
+        console.log('Photo path set to:', photoPath) // Debug log
+        
+      } catch (uploadError) {
+        console.error('Photo upload failed:', uploadError);
+        return next(new ErrorResponse('Problem with file upload', 500));
+      }
+    }
+    
     // Create user
     const user = await User.create({
       firstName,
       lastName,
       email,
       password,
-      role
+      role,
+      photo: photoPath
     });
 
     console.log('User created successfully:', user._id);
+    console.log('User photo:', user.photo);
     console.log('Sending response:', {
       success: true,
       token: user.getSignedJwtToken(),
@@ -33,10 +85,12 @@ exports.register = asyncHandler(async (req, res, next) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        photo: user.photo
       }
     });
     sendTokenResponse(user, 201, res);
+    
   } catch (error) {
     console.error('Registration error:', error);
     
@@ -417,7 +471,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        photo: user.photo
       }
     });
     

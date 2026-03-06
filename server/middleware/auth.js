@@ -38,10 +38,8 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// Grant access to all authenticated users (all users have admin privileges)
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    // All authenticated users now have full privileges
     if (!req.user) {
       return next(
         new ErrorResponse(
@@ -50,6 +48,17 @@ exports.authorize = (...roles) => {
         )
       );
     }
+
+    // If specific roles are provided, enforce role-based access
+    if (roles.length && !roles.includes(req.user.role)) {
+      return next(
+        new ErrorResponse(
+          `User role '${req.user.role}' is not authorized to access this route`,
+          403
+        )
+      );
+    }
+
     next();
   };
 };

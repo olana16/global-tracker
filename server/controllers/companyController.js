@@ -1,5 +1,6 @@
 const Company = require('../models/Company');
 const Person = require('../models/Person');
+const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
@@ -13,64 +14,94 @@ const escapeRegex = (str) => {
   return s.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
 };
 
-// @desc    Get all companies
+// @desc    Get all companies (Role-based access)
 // @route   GET /api/companies
-// @access  Public
+// @access  Private
 exports.getCompanies = async (req, res) => {
-    try {
-        const { page = 1, limit = 10, sortBy = 'name', sortOrder = 'asc', search = '' } = req.query;
-        
-        // Build query
-        const query = {};
-        
-        // Search functionality (escape input to mitigate ReDoS/NoSQL injection)
-        if (search) {
-            const safeSearch = escapeRegex(search);
-            if (safeSearch) {
-              query.$or = [
-                { name: { $regex: safeSearch, $options: 'i' } },
-                { industry: { $regex: safeSearch, $options: 'i' } },
-                { 'ipAddresses': { $in: [safeSearch] } },
-                { 'subdomains': { $in: [safeSearch] } }
-              ];
-            }
-        }
-        
-        // Execute query with pagination
-        const companies = await Company.find(query)
-            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .exec();
-        
-        // Add person count to each company
-        const companiesWithCount = await Promise.all(
-            companies.map(async (company) => {
-                const peopleCount = await Person.countDocuments({ company: company.name });
-                return {
-                    ...company.toObject(),
-                    personCount: peopleCount
-                };
-            })
-        );
-            
-        // Get total count for pagination
-        const count = await Company.countDocuments(query);
-        
-        res.json({
-            success: true,
-            pagination: {
-                total: count,
-                totalPages: Math.ceil(count / limit),
-                currentPage: page,
-                pageSize: limit
-            },
-            data: companiesWithCount
-        });
-    } catch (error) {
-        console.error('Error getting companies:', error);
-        res.status(500).json({ success: false, error: 'Server error' });
+  try {
+    const { page = 1, limit = 10, sortBy = 'name', sortOrder = 'asc', search = '' } = req.query;
+    const requestingUser = req.user;
+    
+    // Build query
+    const query = {};
+    
+    // Search functionality (escape input to mitigate ReDoS/NoSQL injection)
+    if (search) {
+      const safeSearch = escapeRegex(search);
+      if (safeSearch) {
+        query.$or = [
+          { name: { $regex: safeSearch, $options: 'i' } },
+          { industry: { $regex: safeSearch, $options: 'i' } },
+          { 'ipAddresses': { $in: [safeSearch] } },
+          { 'subdomains': { $in: [safeSearch] } }
+        ];
+      }
     }
+
+    // Role-based filtering
+    console.log('Requesting user:', requestingUser) // Debug log
+    console.log('User role:', requestingUser?.role) // Debug log
+    
+    if (requestingUser.role === 'pentester') {
+      // Pentesters can only see companies assigned to them
+      console.log('Pentester access - User ID:', requestingUser._id) // Debug log
+      const user = await User.findById(requestingUser._id);
+      console.log('User from database:', user) // Debug log
+      const assignedCompanyIds = user.assignedCompanies || [];
+      console.log('Pentester assigned company IDs:', assignedCompanyIds) // Debug log
+      console.log('Assigned company IDs type:', typeof assignedCompanyIds) // Debug log
+      console.log('Assigned company IDs length:', assignedCompanyIds.length) // Debug log
+      
+      if (assignedCompanyIds.length === 0) {
+        console.log('Pentester has no assigned companies - returning empty result')
+        query._id = { $in: [] };
+      } else {
+        query._id = { $in: assignedCompanyIds };
+      }
+      console.log('Pentester query filter:', query) // Debug log
+    }
+    // Admin can see all companies, regular users see none
+    // Regular users will get empty result due to role-based filtering
+        
+    // Execute query with pagination
+    console.log('Executing query:', query) // Debug log
+    const companies = await Company.find(query)
+      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+    
+    console.log('Companies found:', companies.length) // Debug log
+    console.log('Companies data:', companies) // Debug log
+    
+    // Add person count to each company
+    const companiesWithCount = await Promise.all(
+      companies.map(async (company) => {
+        const peopleCount = await Person.countDocuments({ company: company.name });
+        return {
+          ...company.toObject(),
+          personCount: peopleCount
+        };
+      })
+    );
+    
+    // Get total count for pagination
+    const count = await Company.countDocuments(query);
+    
+    res.json({
+      success: true,
+      pagination: {
+        total: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        pageSize: limit
+      },
+      data: companiesWithCount
+    });
+  } catch (error) {
+    console.error('Error getting companies:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 };
 
 // @desc    Get single company
@@ -310,9 +341,18 @@ exports.addIpAddress = async (req, res) => {
             });
         }
         
+        const update = {
+            $addToSet: { ipAddresses: ipAddress },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $addToSet: { ipAddresses: ipAddress } },
+            update,
             { new: true, runValidators: true }
         );
         
@@ -338,9 +378,18 @@ exports.addIpAddress = async (req, res) => {
 // @access  Private/Admin
 exports.removeIpAddress = async (req, res) => {
     try {
+        const update = {
+            $pull: { ipAddresses: req.params.ip },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $pull: { ipAddresses: req.params.ip } },
+            update,
             { new: true }
         );
         
@@ -375,9 +424,18 @@ exports.addSubdomain = async (req, res) => {
             });
         }
         
+        const update = {
+            $addToSet: { subdomains: subdomain.toLowerCase() },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $addToSet: { subdomains: subdomain.toLowerCase() } },
+            update,
             { new: true, runValidators: true }
         );
         
@@ -403,9 +461,18 @@ exports.addSubdomain = async (req, res) => {
 // @access  Private/Admin
 exports.removeSubdomain = async (req, res) => {
     try {
+        const update = {
+            $pull: { subdomains: req.params.subdomain.toLowerCase() },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $pull: { subdomains: req.params.subdomain.toLowerCase() } },
+            update,
             { new: true }
         );
         
@@ -610,29 +677,78 @@ exports.exportPeople = async (req, res) => {
   }
 };
 
-// Get company by ID
+// @desc    Get single company (Admin or assigned Pentester only)
+// @route   GET /api/companies/:id
+// @access   Private
 exports.getCompanyById = async (req, res) => {
   try {
     const { id } = req.params;
+    const requestingUser = req.user;
+    
+    console.log('Single company access - User:', requestingUser) // Debug log
+    console.log('Single company access - Company ID:', id) // Debug log
+    console.log('Single company access - User role:', requestingUser?.role) // Debug log
     
     const company = await Company.findById(id);
     
     if (!company) {
-        return res.status(404).json({
-            success: false,
-            error: 'Company not found'
-        });
+      console.log('Company not found:', id) // Debug log
+      return res.status(404).json({
+        success: false,
+        error: 'Company not found'
+      });
     }
 
-    res.json({
+    console.log('Company found:', company) // Debug log
+
+    // Admin can access any company
+    if (requestingUser.role === 'admin') {
+      console.log('Admin access granted') // Debug log
+      return res.json({
         success: true,
         data: company
+      });
+    }
+
+    // Pentester can only access companies assigned to them
+    if (requestingUser.role === 'pentester') {
+      console.log('Pentester access check') // Debug log
+      // Check if this pentester is assigned to this company
+      const user = await User.findById(requestingUser._id);
+      const assignedCompanyIds = user.assignedCompanies || [];
+      const isAssigned = assignedCompanyIds.some(assignedId => 
+        assignedId.toString() === id
+      );
+      console.log('Pentester assigned IDs:', assignedCompanyIds) // Debug log
+      console.log('Company ID to check:', id) // Debug log
+      console.log('Is assigned:', isAssigned) // Debug log
+
+      if (isAssigned) {
+        console.log('Pentester access granted') // Debug log
+        return res.json({
+          success: true,
+          data: company
+        });
+      } else {
+        console.log('Pentester access denied') // Debug log
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied - Company not assigned to this pentester'
+        });
+      }
+    }
+
+    // Regular users cannot access company details
+    console.log('Regular user access denied') // Debug log
+    return res.status(403).json({
+      success: false,
+      error: 'Access denied - Insufficient permissions'
     });
   } catch (error) {
     console.error('Error fetching company:', error);
     res.status(500).json({
-        success: false,
-        error: 'Server error'
+      success: false,
+      error: 'Server error'
     });
   }
 };

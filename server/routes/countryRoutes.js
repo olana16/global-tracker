@@ -5,10 +5,10 @@ const countryController = require('../controllers/countryController');
 const { protect, authorize } = require('../middleware/auth');
 
 // Get all countries
-router.get('/', countryController.getCountries);
+router.get('/', protect, countryController.getCountries);
 
 // Get a single country by ID
-router.get('/:id', countryController.getCountry);
+router.get('/:id', protect, countryController.getCountry);
 
 // Create a new country
 // Middleware to handle validation results

@@ -18,16 +18,25 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react'
-import { companiesAPI, countriesAPI } from '../services/api'
+import { companiesAPI, countriesAPI, peopleAPI } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const Companies = () => {
   const formRef = useRef(null)
+  const { user } = useAuth()
   const [companies, setCompanies] = useState([])
   const [countries, setCountries] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [newIpAddress, setNewIpAddress] = useState('')
+  const [newSubdomain, setNewSubdomain] = useState('')
+  const [newEmployeeFirstName, setNewEmployeeFirstName] = useState('')
+  const [newEmployeeLastName, setNewEmployeeLastName] = useState('')
+  const [newEmployeeEmail, setNewEmployeeEmail] = useState('')
+  const [newEmployeePosition, setNewEmployeePosition] = useState('')
+  const [newEmployeeDepartment, setNewEmployeeDepartment] = useState('')
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -40,126 +49,14 @@ const Companies = () => {
         if (response.success) {
           setCompanies(response.data)
         } else {
-          // Use mock data if API fails
-          console.log('Using mock data for companies')
-          setCompanies([
-            {
-              id: 1,
-              name: 'TechCorp International',
-              country: 'United States',
-              industry: 'Technology',
-              employees: 5000,
-              status: 'active',
-              securityLevel: 'high',
-              lastScan: '2024-01-15',
-              threats: 2
-            },
-            {
-              id: 2,
-              name: 'Global Finance Ltd',
-              country: 'United Kingdom',
-              industry: 'Finance',
-              employees: 3200,
-              status: 'active',
-              securityLevel: 'medium',
-              lastScan: '2024-01-14',
-              threats: 5
-            },
-            {
-              id: 3,
-              name: 'SecureNet Systems',
-              country: 'Germany',
-              industry: 'Cybersecurity',
-              employees: 800,
-              status: 'active',
-              securityLevel: 'high',
-              lastScan: '2024-01-15',
-              threats: 0
-            },
-            {
-              id: 4,
-              name: 'DataFlow Analytics',
-              country: 'Japan',
-              industry: 'Data Analytics',
-              employees: 1500,
-              status: 'monitoring',
-              securityLevel: 'low',
-              lastScan: '2024-01-13',
-              threats: 8
-            },
-            {
-              id: 5,
-              name: 'CloudTech Solutions',
-              country: 'Canada',
-              industry: 'Cloud Services',
-              employees: 2200,
-              status: 'active',
-              securityLevel: 'medium',
-              lastScan: '2024-01-15',
-              threats: 3
-            }
-          ])
+          // API failed - show empty state
+          console.error('API call failed:', response.message)
+          setCompanies([])
         }
       } catch (error) {
         console.error('Error fetching companies:', error)
-        // Set mock data on error
-        setCompanies([
-          {
-            id: 1,
-            name: 'TechCorp International',
-            country: 'United States',
-            industry: 'Technology',
-            employees: 5000,
-            status: 'active',
-            securityLevel: 'high',
-            lastScan: '2024-01-15',
-            threats: 2
-          },
-          {
-            id: 2,
-            name: 'Global Finance Ltd',
-            country: 'United Kingdom',
-            industry: 'Finance',
-            employees: 3200,
-            status: 'active',
-            securityLevel: 'medium',
-            lastScan: '2024-01-14',
-            threats: 5
-          },
-          {
-            id: 3,
-            name: 'SecureNet Systems',
-            country: 'Germany',
-            industry: 'Cybersecurity',
-            employees: 800,
-            status: 'active',
-            securityLevel: 'high',
-            lastScan: '2024-01-15',
-            threats: 0
-          },
-          {
-            id: 4,
-            name: 'DataFlow Analytics',
-            country: 'Japan',
-            industry: 'Data Analytics',
-            employees: 1500,
-            status: 'monitoring',
-            securityLevel: 'low',
-            lastScan: '2024-01-13',
-            threats: 8
-          },
-          {
-            id: 5,
-            name: 'CloudTech Solutions',
-            country: 'Canada',
-            industry: 'Cloud Services',
-            employees: 2200,
-            status: 'active',
-            securityLevel: 'medium',
-            lastScan: '2024-01-15',
-            threats: 3
-          }
-        ])
+        // Show empty state on error
+        setCompanies([])
       } finally {
         setLoading(false)
       }
@@ -170,214 +67,13 @@ const Companies = () => {
         const response = await countriesAPI.getAll()
         if (response.success) {
           setCountries(response.data)
+        } else {
+          setCountries([])
         }
       } catch (error) {
         console.error('Error fetching countries:', error)
-        // Add all countries as fallback
-        setCountries([
-          { _id: 'ethiopia', name: 'Ethiopia', code: 'ET' },
-          { _id: 'usa', name: 'United States', code: 'US' },
-          { _id: 'uk', name: 'United Kingdom', code: 'GB' },
-          { _id: 'canada', name: 'Canada', code: 'CA' },
-          { _id: 'australia', name: 'Australia', code: 'AU' },
-          { _id: 'germany', name: 'Germany', code: 'DE' },
-          { _id: 'france', name: 'France', code: 'FR' },
-          { _id: 'italy', name: 'Italy', code: 'IT' },
-          { _id: 'spain', name: 'Spain', code: 'ES' },
-          { _id: 'netherlands', name: 'Netherlands', code: 'NL' },
-          { _id: 'belgium', name: 'Belgium', code: 'BE' },
-          { _id: 'switzerland', name: 'Switzerland', code: 'CH' },
-          { _id: 'austria', name: 'Austria', code: 'AT' },
-          { _id: 'sweden', name: 'Sweden', code: 'SE' },
-          { _id: 'norway', name: 'Norway', code: 'NO' },
-          { _id: 'denmark', name: 'Denmark', code: 'DK' },
-          { _id: 'finland', name: 'Finland', code: 'FI' },
-          { _id: 'poland', name: 'Poland', code: 'PL' },
-          { _id: 'czech', name: 'Czech Republic', code: 'CZ' },
-          { _id: 'hungary', name: 'Hungary', code: 'HU' },
-          { _id: 'romania', name: 'Romania', code: 'RO' },
-          { _id: 'bulgaria', name: 'Bulgaria', code: 'BG' },
-          { _id: 'greece', name: 'Greece', code: 'GR' },
-          { _id: 'portugal', name: 'Portugal', code: 'PT' },
-          { _id: 'ireland', name: 'Ireland', code: 'IE' },
-          { _id: 'russia', name: 'Russia', code: 'RU' },
-          { _id: 'ukraine', name: 'Ukraine', code: 'UA' },
-          { _id: 'belarus', name: 'Belarus', code: 'BY' },
-          { _id: 'estonia', name: 'Estonia', code: 'EE' },
-          { _id: 'latvia', name: 'Latvia', code: 'LV' },
-          { _id: 'lithuania', name: 'Lithuania', code: 'LT' },
-          { _id: 'china', name: 'China', code: 'CN' },
-          { _id: 'japan', name: 'Japan', code: 'JP' },
-          { _id: 'south-korea', name: 'South Korea', code: 'KR' },
-          { _id: 'north-korea', name: 'North Korea', code: 'KP' },
-          { _id: 'india', name: 'India', code: 'IN' },
-          { _id: 'pakistan', name: 'Pakistan', code: 'PK' },
-          { _id: 'bangladesh', name: 'Bangladesh', code: 'BD' },
-          { _id: 'sri-lanka', name: 'Sri Lanka', code: 'LK' },
-          { _id: 'nepal', name: 'Nepal', code: 'NP' },
-          { _id: 'bhutan', name: 'Bhutan', code: 'BT' },
-          { _id: 'maldives', name: 'Maldives', code: 'MV' },
-          { _id: 'myanmar', name: 'Myanmar', code: 'MM' },
-          { _id: 'thailand', name: 'Thailand', code: 'TH' },
-          { _id: 'vietnam', name: 'Vietnam', code: 'VN' },
-          { _id: 'cambodia', name: 'Cambodia', code: 'KH' },
-          { _id: 'laos', name: 'Laos', code: 'LA' },
-          { _id: 'singapore', name: 'Singapore', code: 'SG' },
-          { _id: 'malaysia', name: 'Malaysia', code: 'MY' },
-          { _id: 'indonesia', name: 'Indonesia', code: 'ID' },
-          { _id: 'philippines', name: 'Philippines', code: 'PH' },
-          { _id: 'brunei', name: 'Brunei', code: 'BN' },
-          { _id: 'east-timor', name: 'East Timor', code: 'TL' },
-          { _id: 'papua-new-guinea', name: 'Papua New Guinea', code: 'PG' },
-          { _id: 'new-zealand', name: 'New Zealand', code: 'NZ' },
-          { _id: 'fiji', name: 'Fiji', code: 'FJ' },
-          { _id: 'solomon-islands', name: 'Solomon Islands', code: 'SB' },
-          { _id: 'vanuatu', name: 'Vanuatu', code: 'VU' },
-          { _id: 'samoa', name: 'Samoa', code: 'WS' },
-          { _id: 'tonga', name: 'Tonga', code: 'TO' },
-          { _id: 'kiribati', name: 'Kiribati', code: 'KI' },
-          { _id: 'tuvalu', name: 'Tuvalu', code: 'TV' },
-          { _id: 'nauru', name: 'Nauru', code: 'NR' },
-          { _id: 'palau', name: 'Palau', code: 'PW' },
-          { _id: 'marshall-islands', name: 'Marshall Islands', code: 'MH' },
-          { _id: 'micronesia', name: 'Micronesia', code: 'FM' },
-          { _id: 'mexico', name: 'Mexico', code: 'MX' },
-          { _id: 'guatemala', name: 'Guatemala', code: 'GT' },
-          { _id: 'belize', name: 'Belize', code: 'BZ' },
-          { _id: 'honduras', name: 'Honduras', code: 'HN' },
-          { _id: 'el-salvador', name: 'El Salvador', code: 'SV' },
-          { _id: 'nicaragua', name: 'Nicaragua', code: 'NI' },
-          { _id: 'costa-rica', name: 'Costa Rica', code: 'CR' },
-          { _id: 'panama', name: 'Panama', code: 'PA' },
-          { _id: 'cuba', name: 'Cuba', code: 'CU' },
-          { _id: 'jamaica', name: 'Jamaica', code: 'JM' },
-          { _id: 'haiti', name: 'Haiti', code: 'HT' },
-          { _id: 'dominican-republic', name: 'Dominican Republic', code: 'DO' },
-          { _id: 'puerto-rico', name: 'Puerto Rico', code: 'PR' },
-          { _id: 'trinidad-tobago', name: 'Trinidad and Tobago', code: 'TT' },
-          { _id: 'barbados', name: 'Barbados', code: 'BB' },
-          { _id: 'bahamas', name: 'Bahamas', code: 'BS' },
-          { _id: 'grenada', name: 'Grenada', code: 'GD' },
-          { _id: 'saint-lucia', name: 'Saint Lucia', code: 'LC' },
-          { _id: 'saint-vincent', name: 'Saint Vincent and the Grenadines', code: 'VC' },
-          { _id: 'antigua-barbuda', name: 'Antigua and Barbuda', code: 'AG' },
-          { _id: 'dominica', name: 'Dominica', code: 'DM' },
-          { _id: 'saint-kitts-nevis', name: 'Saint Kitts and Nevis', code: 'KN' },
-          { _id: 'argentina', name: 'Argentina', code: 'AR' },
-          { _id: 'brazil', name: 'Brazil', code: 'BR' },
-          { _id: 'chile', name: 'Chile', code: 'CL' },
-          { _id: 'peru', name: 'Peru', code: 'PE' },
-          { _id: 'colombia', name: 'Colombia', code: 'CO' },
-          { _id: 'venezuela', name: 'Venezuela', code: 'VE' },
-          { _id: 'ecuador', name: 'Ecuador', code: 'EC' },
-          { _id: 'bolivia', name: 'Bolivia', code: 'BO' },
-          { _id: 'paraguay', name: 'Paraguay', code: 'PY' },
-          { _id: 'uruguay', name: 'Uruguay', code: 'UY' },
-          { _id: 'guyana', name: 'Guyana', code: 'GY' },
-          { _id: 'suriname', name: 'Suriname', code: 'SR' },
-          { _id: 'french-guiana', name: 'French Guiana', code: 'GF' },
-          { _id: 'egypt', name: 'Egypt', code: 'EG' },
-          { _id: 'libya', name: 'Libya', code: 'LY' },
-          { _id: 'tunisia', name: 'Tunisia', code: 'TN' },
-          { _id: 'algeria', name: 'Algeria', code: 'DZ' },
-          { _id: 'morocco', name: 'Morocco', code: 'MA' },
-          { _id: 'sudan', name: 'Sudan', code: 'SD' },
-          { _id: 'south-sudan', name: 'South Sudan', code: 'SS' },
-          { _id: 'chad', name: 'Chad', code: 'TD' },
-          { _id: 'niger', name: 'Niger', code: 'NE' },
-          { _id: 'mali', name: 'Mali', code: 'ML' },
-          { _id: 'burkina-faso', name: 'Burkina Faso', code: 'BF' },
-          { _id: 'senegal', name: 'Senegal', code: 'SN' },
-          { _id: 'gambia', name: 'Gambia', code: 'GM' },
-          { _id: 'guinea-bissau', name: 'Guinea-Bissau', code: 'GW' },
-          { _id: 'guinea', name: 'Guinea', code: 'GN' },
-          { _id: 'sierra-leone', name: 'Sierra Leone', code: 'SL' },
-          { _id: 'liberia', name: 'Liberia', code: 'LR' },
-          { _id: 'ivory-coast', name: 'Ivory Coast', code: 'CI' },
-          { _id: 'ghana', name: 'Ghana', code: 'GH' },
-          { _id: 'togo', name: 'Togo', code: 'TG' },
-          { _id: 'benin', name: 'Benin', code: 'BJ' },
-          { _id: 'nigeria', name: 'Nigeria', code: 'NG' },
-          { _id: 'cameroon', name: 'Cameroon', code: 'CM' },
-          { _id: 'central-african-republic', name: 'Central African Republic', code: 'CF' },
-          { _id: 'congo', name: 'Congo', code: 'CG' },
-          { _id: 'drc', name: 'Democratic Republic of Congo', code: 'CD' },
-          { _id: 'uganda', name: 'Uganda', code: 'UG' },
-          { _id: 'kenya', name: 'Kenya', code: 'KE' },
-          { _id: 'tanzania', name: 'Tanzania', code: 'TZ' },
-          { _id: 'rwanda', name: 'Rwanda', code: 'RW' },
-          { _id: 'burundi', name: 'Burundi', code: 'BI' },
-          { _id: 'somalia', name: 'Somalia', code: 'SO' },
-          { _id: 'djibouti', name: 'Djibouti', code: 'DJ' },
-          { _id: 'eritrea', name: 'Eritrea', code: 'ER' },
-          { _id: 'seychelles', name: 'Seychelles', code: 'SC' },
-          { _id: 'mauritius', name: 'Mauritius', code: 'MU' },
-          { _id: 'madagascar', name: 'Madagascar', code: 'MG' },
-          { _id: 'comoros', name: 'Comoros', code: 'KM' },
-          { _id: 'cape-verde', name: 'Cape Verde', code: 'CV' },
-          { _id: 'sao-tome-principe', name: 'São Tomé and Príncipe', code: 'ST' },
-          { _id: 'equatorial-guinea', name: 'Equatorial Guinea', code: 'GQ' },
-          { _id: 'gabon', name: 'Gabon', code: 'GA' },
-          { _id: 'zambia', name: 'Zambia', code: 'ZM' },
-          { _id: 'malawi', name: 'Malawi', code: 'MW' },
-          { _id: 'zimbabwe', name: 'Zimbabwe', code: 'ZW' },
-          { _id: 'botswana', name: 'Botswana', code: 'BW' },
-          { _id: 'namibia', name: 'Namibia', code: 'NA' },
-          { _id: 'south-africa', name: 'South Africa', code: 'ZA' },
-          { _id: 'lesotho', name: 'Lesotho', code: 'LS' },
-          { _id: 'eswatini', name: 'Eswatini', code: 'SZ' },
-          { _id: 'mozambique', name: 'Mozambique', code: 'MZ' },
-          { _id: 'angola', name: 'Angola', code: 'AO' },
-          { _id: 'turkey', name: 'Turkey', code: 'TR' },
-          { _id: 'cyprus', name: 'Cyprus', code: 'CY' },
-          { _id: 'georgia', name: 'Georgia', code: 'GE' },
-          { _id: 'armenia', name: 'Armenia', code: 'AM' },
-          { _id: 'azerbaijan', name: 'Azerbaijan', code: 'AZ' },
-          { _id: 'kazakhstan', name: 'Kazakhstan', code: 'KZ' },
-          { _id: 'uzbekistan', name: 'Uzbekistan', code: 'UZ' },
-          { _id: 'turkmenistan', name: 'Turkmenistan', code: 'TM' },
-          { _id: 'kyrgyzstan', name: 'Kyrgyzstan', code: 'KG' },
-          { _id: 'tajikistan', name: 'Tajikistan', code: 'TJ' },
-          { _id: 'afghanistan', name: 'Afghanistan', code: 'AF' },
-          { _id: 'pakistan', name: 'Pakistan', code: 'PK' },
-          { _id: 'bangladesh', name: 'Bangladesh', code: 'BD' },
-          { _id: 'sri-lanka', name: 'Sri Lanka', code: 'LK' },
-          { _id: 'maldives', name: 'Maldives', code: 'MV' },
-          { _id: 'nepal', name: 'Nepal', code: 'NP' },
-          { _id: 'bhutan', name: 'Bhutan', code: 'BT' },
-          { _id: 'myanmar', name: 'Myanmar', code: 'MM' },
-          { _id: 'thailand', name: 'Thailand', code: 'TH' },
-          { _id: 'laos', name: 'Laos', code: 'LA' },
-          { _id: 'vietnam', name: 'Vietnam', code: 'VN' },
-          { _id: 'cambodia', name: 'Cambodia', code: 'KH' },
-          { _id: 'malaysia', name: 'Malaysia', code: 'MY' },
-          { _id: 'singapore', name: 'Singapore', code: 'SG' },
-          { _id: 'indonesia', name: 'Indonesia', code: 'ID' },
-          { _id: 'philippines', name: 'Philippines', code: 'PH' },
-          { _id: 'brunei', name: 'Brunei', code: 'BN' },
-          { _id: 'east-timor', name: 'East Timor', code: 'TL' },
-          { _id: 'mongolia', name: 'Mongolia', code: 'MN' },
-          { _id: 'north-korea', name: 'North Korea', code: 'KP' },
-          { _id: 'south-korea', name: 'South Korea', code: 'KR' },
-          { _id: 'japan', name: 'Japan', code: 'JP' },
-          { _id: 'china', name: 'China', code: 'CN' },
-          { _id: 'taiwan', name: 'Taiwan', code: 'TW' },
-          { _id: 'hong-kong', name: 'Hong Kong', code: 'HK' },
-          { _id: 'macau', name: 'Macau', code: 'MO' },
-          { _id: 'israel', name: 'Israel', code: 'IL' },
-          { _id: 'jordan', name: 'Jordan', code: 'JO' },
-          { _id: 'lebanon', name: 'Lebanon', code: 'LB' },
-          { _id: 'syria', name: 'Syria', code: 'SY' },
-          { _id: 'iraq', name: 'Iraq', code: 'IQ' },
-          { _id: 'iran', name: 'Iran', code: 'IR' },
-          { _id: 'saudi-arabia', name: 'Saudi Arabia', code: 'SA' },
-          { _id: 'yemen', name: 'Yemen', code: 'YE' },
-          { _id: 'oman', name: 'Oman', code: 'OM' },
-          { _id: 'uae', name: 'United Arab Emirates', code: 'AE' },
-          { _id: 'qatar', name: 'Qatar', code: 'QA' },
-          { _id: 'kuwait', name: 'Kuwait', code: 'KW' },
-          { _id: 'bahrain', name: 'Bahrain', code: 'BH' }
-        ])
+        // Show empty state on error
+        setCountries([])
       }
     }
 
@@ -634,16 +330,37 @@ const Companies = () => {
       const response = await companiesAPI.getById(company._id)
       if (response.success) {
         setSelectedCompany(response.data)
+        setNewIpAddress('')
+        setNewSubdomain('')
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
         console.log('Viewing company:', response.data)
       } else {
         // Fallback to using the company from the list
         setSelectedCompany(company)
+        setNewIpAddress('')
+        setNewSubdomain('')
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
         console.log('Viewing company (fallback):', company)
       }
     } catch (error) {
       console.error('Error fetching company details:', error)
       // Fallback to using the company from the list
       setSelectedCompany(company)
+      setNewIpAddress('')
+      setNewSubdomain('')
+      setNewEmployeeFirstName('')
+      setNewEmployeeLastName('')
+      setNewEmployeeEmail('')
+      setNewEmployeePosition('')
+      setNewEmployeeDepartment('')
       console.log('Viewing company (fallback):', company)
     }
   }
@@ -651,6 +368,114 @@ const Companies = () => {
   const handleEditCompany = (company) => {
     setSelectedCompany(company)
     setShowAddModal(false)
+  }
+
+  const handleAddEmployeeForCompany = async () => {
+    if (!selectedCompany) return
+    if (!newEmployeeFirstName.trim() || !newEmployeeLastName.trim() || !newEmployeeEmail.trim()) {
+      alert('First name, last name and email are required')
+      return
+    }
+
+    try {
+      const payload = {
+        firstName: newEmployeeFirstName.trim(),
+        lastName: newEmployeeLastName.trim(),
+        email: newEmployeeEmail.trim(),
+        position: newEmployeePosition.trim() || undefined,
+        department: newEmployeeDepartment.trim() || undefined,
+        company: selectedCompany.name,
+        country: selectedCompany.country
+      }
+
+      const response = await peopleAPI.create(payload)
+
+      if (response.success) {
+        try {
+          const companyResponse = await companiesAPI.getById(selectedCompany._id)
+          if (companyResponse.success) {
+            setSelectedCompany(companyResponse.data)
+          } else {
+            setSelectedCompany(prev => prev ? { ...prev, people: [...(prev.people || []), response.data] } : prev)
+          }
+        } catch {
+          setSelectedCompany(prev => prev ? { ...prev, people: [...(prev.people || []), response.data] } : prev)
+        }
+
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
+      } else {
+        alert('Failed to add employee')
+      }
+    } catch (error) {
+      console.error('Error adding employee:', error)
+      alert('Error adding employee: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleAddIpForCompany = async () => {
+    if (!selectedCompany || !newIpAddress.trim()) return
+    try {
+      const response = await companiesAPI.addIpAddress(selectedCompany._id, newIpAddress.trim())
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, ipAddresses: response.data } : prev)
+        setNewIpAddress('')
+      } else {
+        alert('Failed to add IP address')
+      }
+    } catch (error) {
+      console.error('Error adding IP address:', error)
+      alert('Error adding IP address: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleRemoveIpForCompany = async (ip) => {
+    if (!selectedCompany) return
+    try {
+      const response = await companiesAPI.removeIpAddress(selectedCompany._id, ip)
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, ipAddresses: response.data } : prev)
+      } else {
+        alert('Failed to remove IP address')
+      }
+    } catch (error) {
+      console.error('Error removing IP address:', error)
+      alert('Error removing IP address: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleAddSubdomainForCompany = async () => {
+    if (!selectedCompany || !newSubdomain.trim()) return
+    try {
+      const response = await companiesAPI.addSubdomain(selectedCompany._id, newSubdomain.trim())
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, subdomains: response.data } : prev)
+        setNewSubdomain('')
+      } else {
+        alert('Failed to add subdomain')
+      }
+    } catch (error) {
+      console.error('Error adding subdomain:', error)
+      alert('Error adding subdomain: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleRemoveSubdomainForCompany = async (subdomain) => {
+    if (!selectedCompany) return
+    try {
+      const response = await companiesAPI.removeSubdomain(selectedCompany._id, subdomain)
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, subdomains: response.data } : prev)
+      } else {
+        alert('Failed to remove subdomain')
+      }
+    } catch (error) {
+      console.error('Error removing subdomain:', error)
+      alert('Error removing subdomain: ' + (error.response?.data?.message || error.message))
+    }
   }
 
   const handlePrintCompany = async (company) => {
@@ -1403,13 +1228,15 @@ const Companies = () => {
           <h1 className="text-3xl font-bold text-cyber-red mb-2">Companies</h1>
           <p className="text-gray-400">Manage and monitor registered companies</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="cyber-button-green flex items-center"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Company
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="cyber-button-green flex items-center"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Company
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -1533,13 +1360,15 @@ const Companies = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleEditCompany(company)}
-                          className="text-cyber-red hover:text-cyber-yellow transition-colors"
-                          title="Edit Company"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleEditCompany(company)}
+                            className="text-cyber-red hover:text-cyber-yellow transition-colors"
+                            title="Edit Company"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handlePrintCompany(company)}
                           className="text-cyber-red hover:text-cyber-yellow transition-colors"
@@ -1547,13 +1376,15 @@ const Companies = () => {
                         >
                           <Printer className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteCompany(company._id)}
-                          className="text-cyber-red hover:text-cyber-red transition-colors"
-                          title="Delete Company"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleDeleteCompany(company._id)}
+                            className="text-cyber-red hover:text-cyber-red transition-colors"
+                            title="Delete Company"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1919,7 +1750,16 @@ const Companies = () => {
                   <Printer className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => setSelectedCompany(null)}
+                  onClick={() => {
+                    setSelectedCompany(null)
+                    setNewIpAddress('')
+                    setNewSubdomain('')
+                    setNewEmployeeFirstName('')
+                    setNewEmployeeLastName('')
+                    setNewEmployeeEmail('')
+                    setNewEmployeePosition('')
+                    setNewEmployeeDepartment('')
+                  }}
                   className="text-gray-400 hover:text-gray-200 transition-colors"
                   title="Close"
                 >
@@ -1955,31 +1795,165 @@ const Companies = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Employees</label>
-                  <div className="text-gray-100 font-mono">
-                    {selectedCompany.people && selectedCompany.people.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedCompany.people.map((person, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 bg-cyber-dark/30 rounded">
-                            <div>
-                              <div className="text-sm font-medium">{person.firstName} {person.lastName}</div>
-                              <div className="text-xs text-gray-400">{person.position} - {person.department}</div>
+                  <div className="space-y-3">
+                    <div className="text-gray-100 font-mono">
+                      {selectedCompany.people && selectedCompany.people.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedCompany.people.map((person, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-cyber-dark/30 rounded">
+                              <div>
+                                <div className="text-sm font-medium">{person.firstName} {person.lastName}</div>
+                                <div className="text-xs text-gray-400">{person.position} - {person.department}</div>
+                              </div>
+                              <div className="text-xs text-gray-400">{person.email}</div>
                             </div>
-                            <div className="text-xs text-gray-400">{person.email}</div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">No employees found</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                        <input
+                          type="text"
+                          value={newEmployeeFirstName}
+                          onChange={(e) => setNewEmployeeFirstName(e.target.value)}
+                          placeholder="First name"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={newEmployeeLastName}
+                          onChange={(e) => setNewEmployeeLastName(e.target.value)}
+                          placeholder="Last name"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="email"
+                          value={newEmployeeEmail}
+                          onChange={(e) => setNewEmployeeEmail(e.target.value)}
+                          placeholder="Email"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={newEmployeePosition}
+                          onChange={(e) => setNewEmployeePosition(e.target.value)}
+                          placeholder="Position"
+                          className="cyber-input text-xs"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newEmployeeDepartment}
+                            onChange={(e) => setNewEmployeeDepartment(e.target.value)}
+                            placeholder="Department"
+                            className="cyber-input text-xs flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddEmployeeForCompany}
+                            className="cyber-button-green text-xs px-3 whitespace-nowrap"
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-500">No employees found</span>
                     )}
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">IP Addresses</label>
-                  <div className="text-gray-100 font-mono">{selectedCompany.ipAddresses ? selectedCompany.ipAddresses.join(', ') : 'None'}</div>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCompany.ipAddresses && selectedCompany.ipAddresses.length > 0 ? (
+                        selectedCompany.ipAddresses.map((ip, index) => (
+                          <span
+                            key={`${ip}-${index}`}
+                            className="inline-flex items-center px-2 py-1 bg-cyber-dark/40 rounded text-xs font-mono text-gray-100"
+                          >
+                            {ip}
+                            {user?.role === 'pentester' && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveIpForCompany(ip)}
+                                className="ml-1 text-cyber-red hover:text-cyber-red/80"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500 text-sm">No IP addresses registered</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={newIpAddress}
+                          onChange={(e) => setNewIpAddress(e.target.value)}
+                          placeholder="Add IP (e.g. 203.0.113.10)"
+                          className="cyber-input flex-1 text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddIpForCompany}
+                          className="cyber-button-green text-xs px-3"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Subdomains</label>
-                  <div className="text-gray-100 font-mono">{selectedCompany.subdomains ? selectedCompany.subdomains.join(', ') : 'None'}</div>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCompany.subdomains && selectedCompany.subdomains.length > 0 ? (
+                        selectedCompany.subdomains.map((sub, index) => (
+                          <span
+                            key={`${sub}-${index}`}
+                            className="inline-flex items-center px-2 py-1 bg-cyber-dark/40 rounded text-xs font-mono text-gray-100"
+                          >
+                            {sub}
+                            {user?.role === 'pentester' && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSubdomainForCompany(sub)}
+                                className="ml-1 text-cyber-red hover:text-cyber-red/80"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500 text-sm">No subdomains registered</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={newSubdomain}
+                          onChange={(e) => setNewSubdomain(e.target.value)}
+                          placeholder="Add subdomain (e.g. vpn.example.com)"
+                          className="cyber-input flex-1 text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSubdomainForCompany}
+                          className="cyber-button-green text-xs px-3"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Created At</label>
@@ -1988,6 +1962,14 @@ const Companies = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Revenue</label>
                   <div className="text-gray-100 font-mono">{selectedCompany.revenue ? `${selectedCompany.revenue.amount} ${selectedCompany.revenue.currency}` : 'Not specified'}</div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Last Updated By</label>
+                  <div className="text-gray-100 font-mono">
+                    {selectedCompany.lastUpdatedByName
+                      ? `${selectedCompany.lastUpdatedByName}${selectedCompany.lastUpdatedByRole ? ` (${selectedCompany.lastUpdatedByRole})` : ''}`
+                      : 'Not available'}
+                  </div>
                 </div>
               </div>
             </div>

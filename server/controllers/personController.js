@@ -178,6 +178,21 @@ exports.createPerson = async (req, res) => {
 
         await person.save();
 
+        // If this person was created in the context of a company and we have an authenticated user,
+        // update the company's lastUpdatedBy fields so admins can see who added the employee.
+        if (company && req.user) {
+            await Company.findOneAndUpdate(
+                { name: company },
+                {
+                    $set: {
+                        lastUpdatedBy: req.user._id,
+                        lastUpdatedByName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                        lastUpdatedByRole: req.user.role
+                    }
+                }
+            );
+        }
+
         // Return person data (no need to populate company/country since they're strings)
         res.status(201).json({
             success: true,

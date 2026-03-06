@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Shield, Mail, Lock, User, Eye, EyeOff, AlertCircle, Briefcase, UserPlus } from 'lucide-react'
+import { Shield, Mail, Lock, User, Eye, EyeOff, AlertCircle, Briefcase, UserPlus, Camera, Upload } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Register = () => {
@@ -9,11 +9,13 @@ const Register = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    photo: null
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState('')
   
   const { register, error, loading } = useAuth()
   const navigate = useNavigate()
@@ -25,6 +27,35 @@ const Register = () => {
     })
   }
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file')
+        return
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Photo size should be less than 5MB')
+        return
+      }
+      
+      setFormData({
+        ...formData,
+        photo: file
+      })
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setPhotoPreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -34,13 +65,18 @@ const Register = () => {
     
     setIsSubmitting(true)
     
-    const result = await register({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-      role: 'admin' // Give all users admin privileges
-    })
+    // Create FormData for file upload
+    const submitData = new FormData()
+    submitData.append('firstName', formData.firstName)
+    submitData.append('lastName', formData.lastName)
+    submitData.append('email', formData.email)
+    submitData.append('password', formData.password)
+    submitData.append('role', 'admin') // Always register as admin
+    if (formData.photo) {
+      submitData.append('photo', formData.photo)
+    }
+    
+    const result = await register(submitData)
     
     console.log('Register result:', result) // Debug log
     
@@ -114,6 +150,52 @@ const Register = () => {
                   className="cyber-input pl-10"
                   placeholder="Doe"
                 />
+              </div>
+            </div>
+
+            {/* Photo Upload Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Profile Photo (Optional)
+              </label>
+              <div className="flex items-center space-x-4">
+                {/* Photo Preview */}
+                <div className="relative">
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt="Profile preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-cyber-red/30"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-cyber-dark/60 border-2 border-cyber-red/30 flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Upload Button */}
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    id="photo-upload"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="photo-upload"
+                    className="flex items-center justify-center px-4 py-2 bg-cyber-dark/60 border border-cyber-red/30 rounded-lg cursor-pointer hover:bg-cyber-dark/80 transition-colors"
+                  >
+                    <Upload className="w-4 h-4 mr-2 text-cyber-red" />
+                    <span className="text-sm text-gray-300">
+                      {formData.photo ? 'Change Photo' : 'Upload Photo'}
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG or GIF (max 5MB)
+                  </p>
+                </div>
               </div>
             </div>
 

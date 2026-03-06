@@ -1,18 +1,47 @@
 const Country = require('../models/Country');
 const Company = require('../models/Company');
 const Person = require('../models/Person');
+const User = require('../models/User');
 
-// @desc    Get all countries
+// @desc    Get all countries (Admin or assigned Pentester only)
 // @route   GET /api/countries
-// @access  Public
+// @access  Private
 exports.getCountries = async (req, res) => {
     try {
-        const countries = await Country.find().sort('name');
-        console.log('All countries found in database:', countries.map(c => ({ name: c.name, code: c.code })));
+        const requestingUser = req.user;
+        console.log('Countries request - User:', requestingUser) // Debug log
+        console.log('Countries request - User role:', requestingUser?.role) // Debug log
         
-        // Check if Ethiopia exists
+        let countries;
+        
+        if (requestingUser.role === 'pentester') {
+            // Pentesters can only see countries where they have assigned companies
+            console.log('Pentester access - filtering countries by assigned companies') // Debug log
+            const user = await User.findById(requestingUser._id);
+            const assignedCompanyIds = user.assignedCompanies || [];
+            console.log('Pentester assigned company IDs:', assignedCompanyIds) // Debug log
+            
+            // Get companies assigned to this pentester
+            const assignedCompanies = await Company.find({ _id: { $in: assignedCompanyIds } });
+            console.log('Pentester assigned companies:', assignedCompanies.map(c => ({ name: c.name, country: c.country }))) // Debug log
+            
+            // Get unique countries from assigned companies
+            const assignedCountryNames = [...new Set(assignedCompanies.map(company => company.country).filter(Boolean))];
+            console.log('Pentester assigned country names:', assignedCountryNames) // Debug log
+            
+            // Get countries that match assigned company countries
+            countries = await Country.find({ name: { $in: assignedCountryNames } }).sort('name');
+            console.log('Pentester filtered countries:', countries.map(c => ({ name: c.name, code: c.code }))) // Debug log
+        } else {
+            // Admin can see all countries
+            console.log('Admin access - showing all countries') // Debug log
+            countries = await Country.find().sort('name');
+            console.log('All countries found in database:', countries.map(c => ({ name: c.name, code: c.code })));
+        }
+        
+        // Check if Ethiopia exists (only for admin or if Ethiopia is in pentester's assigned countries)
         const ethiopia = countries.find(c => c.name === 'Ethiopia');
-        if (!ethiopia) {
+        if (!ethiopia && requestingUser.role === 'admin') {
             console.log('Ethiopia not found in database, creating it...');
             // Create Ethiopia if it doesn't exist
             const newEthiopia = new Country({
@@ -33,11 +62,11 @@ exports.getCountries = async (req, res) => {
             console.log('Updated countries list:', updatedCountries.map(c => ({ name: c.name, code: c.code })));
             
             // Now proceed with counting
-            return processCountriesWithCounts(updatedCountries, res);
+            return processCountriesWithCounts(updatedCountries, res, requestingUser);
         }
         
         // Process existing countries
-        return processCountriesWithCounts(countries, res);
+        return processCountriesWithCounts(countries, res, requestingUser);
         
     } catch (error) {
         console.error('Error getting countries:', error);
@@ -45,18 +74,48 @@ exports.getCountries = async (req, res) => {
     }
 };
 
-const processCountriesWithCounts = async (countries, res) => {
+const processCountriesWithCounts = async (countries, res, requestingUser) => {
     // Add company and person counts to each country
     const countriesWithCounts = await Promise.all(
         countries.map(async (country) => {
-            const companyCount = await Company.countDocuments({ country: country.name });
-            const personCount = await Person.countDocuments({ country: country.name });
+            let companyCount, personCount;
             
-            console.log(`Country: "${country.name}", Company count: ${companyCount}, Person count: ${personCount}`);
+            if (requestingUser.role === 'pentester') {
+                // For pentesters, only count companies and people from their assigned companies
+                const user = await User.findById(requestingUser._id);
+                const assignedCompanyIds = user.assignedCompanies || [];
+                
+                // Count companies assigned to this pentester in this country
+                companyCount = await Company.countDocuments({ 
+                    _id: { $in: assignedCompanyIds },
+                    country: country.name 
+                });
+                
+                // Get assigned company names for this country
+                const assignedCompaniesInCountry = await Company.find({ 
+                    _id: { $in: assignedCompanyIds },
+                    country: country.name 
+                });
+                const assignedCompanyNames = assignedCompaniesInCountry.map(c => c.name);
+                
+                // Count people from assigned companies in this country
+                personCount = await Person.countDocuments({ 
+                    company: { $in: assignedCompanyNames },
+                    country: country.name 
+                });
+                
+                console.log(`Pentester - Country: "${country.name}", Company count: ${companyCount}, Person count: ${personCount}`);
+            } else {
+                // Admin can see all companies and people
+                companyCount = await Company.countDocuments({ country: country.name });
+                personCount = await Person.countDocuments({ country: country.name });
+                
+                console.log(`Admin - Country: "${country.name}", Company count: ${companyCount}, Person count: ${personCount}`);
+            }
             
             // Debug: Let's also see what companies exist for this country
-            const companies = await Company.find({ country: country.name });
-            console.log(`Companies found for ${country.name}:`, companies.map(c => ({ name: c.name, country: c.country })));
+            const companiesFound = await Company.find({ country: country.name });
+            console.log(`Companies found for ${country.name}:`, companiesFound.map(c => ({ name: c.name, country: c.country })));
             
             return {
                 ...country.toObject(),
@@ -66,10 +125,10 @@ const processCountriesWithCounts = async (countries, res) => {
         })
     );
     
-    res.json({
-        success: true,
+    res.json({ 
+        success: true, 
         count: countriesWithCounts.length,
-        data: countriesWithCounts
+        data: countriesWithCounts 
     });
 };
 

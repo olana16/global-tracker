@@ -110,11 +110,18 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const updateUser = (updatedUserData) => {
+    console.log('Updating user in context:', updatedUserData) // Debug log
+    setUser(updatedUserData)
+    localStorage.setItem('user', JSON.stringify(updatedUserData))
+  }
+
   const value = {
     user,
     login,
     register,
     logout,
+    updateUser,
     loading,
     error,
     isAuthenticated: !!user,
