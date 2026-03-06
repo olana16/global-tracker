@@ -18,16 +18,25 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react'
-import { companiesAPI, countriesAPI } from '../services/api'
+import { companiesAPI, countriesAPI, peopleAPI } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 const Companies = () => {
   const formRef = useRef(null)
+  const { user } = useAuth()
   const [companies, setCompanies] = useState([])
   const [countries, setCountries] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [newIpAddress, setNewIpAddress] = useState('')
+  const [newSubdomain, setNewSubdomain] = useState('')
+  const [newEmployeeFirstName, setNewEmployeeFirstName] = useState('')
+  const [newEmployeeLastName, setNewEmployeeLastName] = useState('')
+  const [newEmployeeEmail, setNewEmployeeEmail] = useState('')
+  const [newEmployeePosition, setNewEmployeePosition] = useState('')
+  const [newEmployeeDepartment, setNewEmployeeDepartment] = useState('')
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -321,16 +330,37 @@ const Companies = () => {
       const response = await companiesAPI.getById(company._id)
       if (response.success) {
         setSelectedCompany(response.data)
+        setNewIpAddress('')
+        setNewSubdomain('')
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
         console.log('Viewing company:', response.data)
       } else {
         // Fallback to using the company from the list
         setSelectedCompany(company)
+        setNewIpAddress('')
+        setNewSubdomain('')
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
         console.log('Viewing company (fallback):', company)
       }
     } catch (error) {
       console.error('Error fetching company details:', error)
       // Fallback to using the company from the list
       setSelectedCompany(company)
+      setNewIpAddress('')
+      setNewSubdomain('')
+      setNewEmployeeFirstName('')
+      setNewEmployeeLastName('')
+      setNewEmployeeEmail('')
+      setNewEmployeePosition('')
+      setNewEmployeeDepartment('')
       console.log('Viewing company (fallback):', company)
     }
   }
@@ -338,6 +368,114 @@ const Companies = () => {
   const handleEditCompany = (company) => {
     setSelectedCompany(company)
     setShowAddModal(false)
+  }
+
+  const handleAddEmployeeForCompany = async () => {
+    if (!selectedCompany) return
+    if (!newEmployeeFirstName.trim() || !newEmployeeLastName.trim() || !newEmployeeEmail.trim()) {
+      alert('First name, last name and email are required')
+      return
+    }
+
+    try {
+      const payload = {
+        firstName: newEmployeeFirstName.trim(),
+        lastName: newEmployeeLastName.trim(),
+        email: newEmployeeEmail.trim(),
+        position: newEmployeePosition.trim() || undefined,
+        department: newEmployeeDepartment.trim() || undefined,
+        company: selectedCompany.name,
+        country: selectedCompany.country
+      }
+
+      const response = await peopleAPI.create(payload)
+
+      if (response.success) {
+        try {
+          const companyResponse = await companiesAPI.getById(selectedCompany._id)
+          if (companyResponse.success) {
+            setSelectedCompany(companyResponse.data)
+          } else {
+            setSelectedCompany(prev => prev ? { ...prev, people: [...(prev.people || []), response.data] } : prev)
+          }
+        } catch {
+          setSelectedCompany(prev => prev ? { ...prev, people: [...(prev.people || []), response.data] } : prev)
+        }
+
+        setNewEmployeeFirstName('')
+        setNewEmployeeLastName('')
+        setNewEmployeeEmail('')
+        setNewEmployeePosition('')
+        setNewEmployeeDepartment('')
+      } else {
+        alert('Failed to add employee')
+      }
+    } catch (error) {
+      console.error('Error adding employee:', error)
+      alert('Error adding employee: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleAddIpForCompany = async () => {
+    if (!selectedCompany || !newIpAddress.trim()) return
+    try {
+      const response = await companiesAPI.addIpAddress(selectedCompany._id, newIpAddress.trim())
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, ipAddresses: response.data } : prev)
+        setNewIpAddress('')
+      } else {
+        alert('Failed to add IP address')
+      }
+    } catch (error) {
+      console.error('Error adding IP address:', error)
+      alert('Error adding IP address: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleRemoveIpForCompany = async (ip) => {
+    if (!selectedCompany) return
+    try {
+      const response = await companiesAPI.removeIpAddress(selectedCompany._id, ip)
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, ipAddresses: response.data } : prev)
+      } else {
+        alert('Failed to remove IP address')
+      }
+    } catch (error) {
+      console.error('Error removing IP address:', error)
+      alert('Error removing IP address: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleAddSubdomainForCompany = async () => {
+    if (!selectedCompany || !newSubdomain.trim()) return
+    try {
+      const response = await companiesAPI.addSubdomain(selectedCompany._id, newSubdomain.trim())
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, subdomains: response.data } : prev)
+        setNewSubdomain('')
+      } else {
+        alert('Failed to add subdomain')
+      }
+    } catch (error) {
+      console.error('Error adding subdomain:', error)
+      alert('Error adding subdomain: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  const handleRemoveSubdomainForCompany = async (subdomain) => {
+    if (!selectedCompany) return
+    try {
+      const response = await companiesAPI.removeSubdomain(selectedCompany._id, subdomain)
+      if (response.success) {
+        setSelectedCompany(prev => prev ? { ...prev, subdomains: response.data } : prev)
+      } else {
+        alert('Failed to remove subdomain')
+      }
+    } catch (error) {
+      console.error('Error removing subdomain:', error)
+      alert('Error removing subdomain: ' + (error.response?.data?.message || error.message))
+    }
   }
 
   const handlePrintCompany = async (company) => {
@@ -1090,13 +1228,15 @@ const Companies = () => {
           <h1 className="text-3xl font-bold text-cyber-red mb-2">Companies</h1>
           <p className="text-gray-400">Manage and monitor registered companies</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="cyber-button-green flex items-center"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Company
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="cyber-button-green flex items-center"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Company
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -1220,13 +1360,15 @@ const Companies = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleEditCompany(company)}
-                          className="text-cyber-red hover:text-cyber-yellow transition-colors"
-                          title="Edit Company"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleEditCompany(company)}
+                            className="text-cyber-red hover:text-cyber-yellow transition-colors"
+                            title="Edit Company"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handlePrintCompany(company)}
                           className="text-cyber-red hover:text-cyber-yellow transition-colors"
@@ -1234,13 +1376,15 @@ const Companies = () => {
                         >
                           <Printer className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteCompany(company._id)}
-                          className="text-cyber-red hover:text-cyber-red transition-colors"
-                          title="Delete Company"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleDeleteCompany(company._id)}
+                            className="text-cyber-red hover:text-cyber-red transition-colors"
+                            title="Delete Company"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1606,7 +1750,16 @@ const Companies = () => {
                   <Printer className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => setSelectedCompany(null)}
+                  onClick={() => {
+                    setSelectedCompany(null)
+                    setNewIpAddress('')
+                    setNewSubdomain('')
+                    setNewEmployeeFirstName('')
+                    setNewEmployeeLastName('')
+                    setNewEmployeeEmail('')
+                    setNewEmployeePosition('')
+                    setNewEmployeeDepartment('')
+                  }}
                   className="text-gray-400 hover:text-gray-200 transition-colors"
                   title="Close"
                 >
@@ -1642,31 +1795,165 @@ const Companies = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Employees</label>
-                  <div className="text-gray-100 font-mono">
-                    {selectedCompany.people && selectedCompany.people.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedCompany.people.map((person, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 bg-cyber-dark/30 rounded">
-                            <div>
-                              <div className="text-sm font-medium">{person.firstName} {person.lastName}</div>
-                              <div className="text-xs text-gray-400">{person.position} - {person.department}</div>
+                  <div className="space-y-3">
+                    <div className="text-gray-100 font-mono">
+                      {selectedCompany.people && selectedCompany.people.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedCompany.people.map((person, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-cyber-dark/30 rounded">
+                              <div>
+                                <div className="text-sm font-medium">{person.firstName} {person.lastName}</div>
+                                <div className="text-xs text-gray-400">{person.position} - {person.department}</div>
+                              </div>
+                              <div className="text-xs text-gray-400">{person.email}</div>
                             </div>
-                            <div className="text-xs text-gray-400">{person.email}</div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">No employees found</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                        <input
+                          type="text"
+                          value={newEmployeeFirstName}
+                          onChange={(e) => setNewEmployeeFirstName(e.target.value)}
+                          placeholder="First name"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={newEmployeeLastName}
+                          onChange={(e) => setNewEmployeeLastName(e.target.value)}
+                          placeholder="Last name"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="email"
+                          value={newEmployeeEmail}
+                          onChange={(e) => setNewEmployeeEmail(e.target.value)}
+                          placeholder="Email"
+                          className="cyber-input text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={newEmployeePosition}
+                          onChange={(e) => setNewEmployeePosition(e.target.value)}
+                          placeholder="Position"
+                          className="cyber-input text-xs"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newEmployeeDepartment}
+                            onChange={(e) => setNewEmployeeDepartment(e.target.value)}
+                            placeholder="Department"
+                            className="cyber-input text-xs flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddEmployeeForCompany}
+                            className="cyber-button-green text-xs px-3 whitespace-nowrap"
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-500">No employees found</span>
                     )}
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">IP Addresses</label>
-                  <div className="text-gray-100 font-mono">{selectedCompany.ipAddresses ? selectedCompany.ipAddresses.join(', ') : 'None'}</div>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCompany.ipAddresses && selectedCompany.ipAddresses.length > 0 ? (
+                        selectedCompany.ipAddresses.map((ip, index) => (
+                          <span
+                            key={`${ip}-${index}`}
+                            className="inline-flex items-center px-2 py-1 bg-cyber-dark/40 rounded text-xs font-mono text-gray-100"
+                          >
+                            {ip}
+                            {user?.role === 'pentester' && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveIpForCompany(ip)}
+                                className="ml-1 text-cyber-red hover:text-cyber-red/80"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500 text-sm">No IP addresses registered</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={newIpAddress}
+                          onChange={(e) => setNewIpAddress(e.target.value)}
+                          placeholder="Add IP (e.g. 203.0.113.10)"
+                          className="cyber-input flex-1 text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddIpForCompany}
+                          className="cyber-button-green text-xs px-3"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Subdomains</label>
-                  <div className="text-gray-100 font-mono">{selectedCompany.subdomains ? selectedCompany.subdomains.join(', ') : 'None'}</div>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCompany.subdomains && selectedCompany.subdomains.length > 0 ? (
+                        selectedCompany.subdomains.map((sub, index) => (
+                          <span
+                            key={`${sub}-${index}`}
+                            className="inline-flex items-center px-2 py-1 bg-cyber-dark/40 rounded text-xs font-mono text-gray-100"
+                          >
+                            {sub}
+                            {user?.role === 'pentester' && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSubdomainForCompany(sub)}
+                                className="ml-1 text-cyber-red hover:text-cyber-red/80"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500 text-sm">No subdomains registered</span>
+                      )}
+                    </div>
+                    {user?.role === 'pentester' && (
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="text"
+                          value={newSubdomain}
+                          onChange={(e) => setNewSubdomain(e.target.value)}
+                          placeholder="Add subdomain (e.g. vpn.example.com)"
+                          className="cyber-input flex-1 text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSubdomainForCompany}
+                          className="cyber-button-green text-xs px-3"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Created At</label>
@@ -1675,6 +1962,14 @@ const Companies = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Revenue</label>
                   <div className="text-gray-100 font-mono">{selectedCompany.revenue ? `${selectedCompany.revenue.amount} ${selectedCompany.revenue.currency}` : 'Not specified'}</div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Last Updated By</label>
+                  <div className="text-gray-100 font-mono">
+                    {selectedCompany.lastUpdatedByName
+                      ? `${selectedCompany.lastUpdatedByName}${selectedCompany.lastUpdatedByRole ? ` (${selectedCompany.lastUpdatedByRole})` : ''}`
+                      : 'Not available'}
+                  </div>
                 </div>
               </div>
             </div>

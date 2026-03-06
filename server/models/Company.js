@@ -40,6 +40,19 @@ const companySchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // Track who last modified company-related technical/employee data
+    lastUpdatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    lastUpdatedByName: {
+        type: String,
+        trim: true
+    },
+    lastUpdatedByRole: {
+        type: String,
+        trim: true
+    },
     ipAddresses: [{
         type: String,
         trim: true

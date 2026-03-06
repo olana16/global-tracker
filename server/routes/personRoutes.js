@@ -17,11 +17,11 @@ router.get('/', personController.getPeople);
 // Get a single person by ID
 router.get('/:id', personController.getPerson);
 
-// Create a new person
+// Create a new person (admin and pentester)
 router.post(
   '/',
   protect,
-  authorize('admin'),
+  authorize('admin', 'pentester'),
   [
     check('firstName', 'First name is required').not().isEmpty(),
     check('lastName', 'Last name is required').not().isEmpty(),

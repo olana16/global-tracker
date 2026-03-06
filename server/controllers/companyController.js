@@ -341,9 +341,18 @@ exports.addIpAddress = async (req, res) => {
             });
         }
         
+        const update = {
+            $addToSet: { ipAddresses: ipAddress },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $addToSet: { ipAddresses: ipAddress } },
+            update,
             { new: true, runValidators: true }
         );
         
@@ -369,9 +378,18 @@ exports.addIpAddress = async (req, res) => {
 // @access  Private/Admin
 exports.removeIpAddress = async (req, res) => {
     try {
+        const update = {
+            $pull: { ipAddresses: req.params.ip },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $pull: { ipAddresses: req.params.ip } },
+            update,
             { new: true }
         );
         
@@ -406,9 +424,18 @@ exports.addSubdomain = async (req, res) => {
             });
         }
         
+        const update = {
+            $addToSet: { subdomains: subdomain.toLowerCase() },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $addToSet: { subdomains: subdomain.toLowerCase() } },
+            update,
             { new: true, runValidators: true }
         );
         
@@ -434,9 +461,18 @@ exports.addSubdomain = async (req, res) => {
 // @access  Private/Admin
 exports.removeSubdomain = async (req, res) => {
     try {
+        const update = {
+            $pull: { subdomains: req.params.subdomain.toLowerCase() },
+            $set: {
+                lastUpdatedBy: req.user ? req.user._id : undefined,
+                lastUpdatedByName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : undefined,
+                lastUpdatedByRole: req.user ? req.user.role : undefined
+            }
+        };
+
         const company = await Company.findByIdAndUpdate(
             req.params.id,
-            { $pull: { subdomains: req.params.subdomain.toLowerCase() } },
+            update,
             { new: true }
         );
         

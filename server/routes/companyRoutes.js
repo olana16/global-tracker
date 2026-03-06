@@ -50,16 +50,16 @@ router.get('/:id/export', protect, authorize('admin'), exportLimiter, companyCon
 // Get people by company
 router.get('/:id/people', companyController.getCompanyPeople);
 
-// Add IP address to company (admin only)
-router.post('/:id/ips', protect, authorize('admin'), companyController.addIpAddress);
+// Add IP address to company (admin and pentester)
+router.post('/:id/ips', protect, authorize('admin', 'pentester'), companyController.addIpAddress);
 
-// Remove IP address from company (admin only)
-router.delete('/:id/ips/:ip', protect, authorize('admin'), companyController.removeIpAddress);
+// Remove IP address from company (admin and pentester)
+router.delete('/:id/ips/:ip', protect, authorize('admin', 'pentester'), companyController.removeIpAddress);
 
-// Add subdomain to company (admin only)
-router.post('/:id/subdomains', protect, authorize('admin'), companyController.addSubdomain);
+// Add subdomain to company (admin and pentester)
+router.post('/:id/subdomains', protect, authorize('admin', 'pentester'), companyController.addSubdomain);
 
-// Remove subdomain from company (admin only)
-router.delete('/:id/subdomains/:subdomain', protect, authorize('admin'), companyController.removeSubdomain);
+// Remove subdomain from company (admin and pentester)
+router.delete('/:id/subdomains/:subdomain', protect, authorize('admin', 'pentester'), companyController.removeSubdomain);
 
 module.exports = router;

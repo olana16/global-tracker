@@ -128,6 +128,26 @@ export const companiesAPI = {
   getPeople: async (id) => {
     const response = await api.get(`/companies/${id}/people`)
     return response.data
+  },
+
+  addIpAddress: async (id, ipAddress) => {
+    const response = await api.post(`/companies/${id}/ips`, { ipAddress })
+    return response.data
+  },
+
+  removeIpAddress: async (id, ip) => {
+    const response = await api.delete(`/companies/${id}/ips/${encodeURIComponent(ip)}`)
+    return response.data
+  },
+
+  addSubdomain: async (id, subdomain) => {
+    const response = await api.post(`/companies/${id}/subdomains`, { subdomain })
+    return response.data
+  },
+
+  removeSubdomain: async (id, subdomain) => {
+    const response = await api.delete(`/companies/${id}/subdomains/${encodeURIComponent(subdomain.toLowerCase())}`)
+    return response.data
   }
 }
 
