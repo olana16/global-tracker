@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Users, 
   UserPlus, 
@@ -11,7 +11,9 @@ import {
   Eye,
   EyeOff,
   Camera,
-  Upload
+  Upload,
+  X,
+  Building2
 } from 'lucide-react'
 import { userAPI, companiesAPI } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -22,10 +24,12 @@ const UserManagement = () => {
   const [companies, setCompanies] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [modalMode, setModalMode] = useState('create') // 'create', 'edit', 'assign'
+  const [modalMode, setModalMode] = useState('create') // 'create', 'edit', 'assign', 'view-companies'
   const [loading, setLoading] = useState(true)
   const [userPhoto, setUserPhoto] = useState(null)
   const [photoPreview, setPhotoPreview] = useState('')
+  const [expandedUser, setExpandedUser] = useState(null)
+  const [userCompanies, setUserCompanies] = useState([])
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -70,6 +74,11 @@ const UserManagement = () => {
       setLoading(true)
       const response = await userAPI.getAllUsers()
       if (response.success) {
+        console.log('Fetched users data:', response.data) // Debug log
+        // Log each user's assigned companies
+        response.data.forEach(user => {
+          console.log(`User ${user.firstName} ${user.lastName} assigned companies:`, user.assignedCompanies)
+        })
         setUsers(response.data)
       } else {
         console.error('Failed to fetch users:', response.message)
@@ -108,6 +117,87 @@ const UserManagement = () => {
     setSelectedUser(user)
     setModalMode('assign')
     setShowModal(true)
+  }
+
+  const handleViewCompanies = async (user) => {
+    if (expandedUser === user._id) {
+      setExpandedUser(null)
+      setUserCompanies([])
+    } else {
+      setExpandedUser(user._id)
+      setSelectedUser(user)
+      
+      console.log('User assigned companies:', user.assignedCompanies) // Debug log
+      
+      try {
+        // Get detailed company information for this user's assigned companies
+        const assignedCompanyIds = user.assignedCompanies || []
+        console.log('Company IDs to fetch:', assignedCompanyIds) // Debug log
+        
+        if (assignedCompanyIds.length === 0) {
+          setUserCompanies([])
+          return
+        }
+        
+        const companyDetails = await Promise.all(
+          assignedCompanyIds.map(async (companyObj) => {
+            try {
+              // Extract the company ID from the object
+              const companyId = companyObj._id || companyObj.id || companyObj
+              console.log('Fetching company:', companyId) // Debug log
+              const response = await companiesAPI.getById(companyId)
+              console.log('Company response:', response) // Debug log
+              return response.success ? response.data : null
+            } catch (error) {
+              console.error('Error fetching company details:', error)
+              return null
+            }
+          })
+        )
+        
+        const validCompanies = companyDetails.filter(company => company !== null)
+        console.log('Valid companies found:', validCompanies) // Debug log
+        setUserCompanies(validCompanies)
+      } catch (error) {
+        console.error('Error fetching user companies:', error)
+        setUserCompanies([])
+      }
+    }
+  }
+
+  const handleRemoveFromCompany = async (userId, companyId) => {
+    if (window.confirm('Are you sure you want to remove this pentester from this company?')) {
+      try {
+        // Get current user to see their assigned companies
+        const userResponse = await userAPI.getUserById(userId)
+        if (userResponse.success) {
+          const currentUser = userResponse.data
+          const updatedCompanyIds = (currentUser.assignedCompanies || [])
+            .filter(id => id.toString() !== companyId.toString())
+          
+          const response = await userAPI.assignCompanies(userId, updatedCompanyIds)
+          
+          if (response.success) {
+            // Update local state
+            setUsers(users.map(u => 
+              u._id === userId 
+                ? { ...u, assignedCompanies: updatedCompanyIds }
+                : u
+            ))
+            
+            // Update expanded view
+            setUserCompanies(userCompanies.filter(c => c._id !== companyId))
+            
+            alert('Pentester removed from company successfully')
+          } else {
+            alert('Failed to remove pentester from company: ' + response.message)
+          }
+        }
+      } catch (error) {
+        console.error('Error removing pentester from company:', error)
+        alert('Error removing pentester from company: ' + error.message)
+      }
+    }
   }
 
   const handleDeleteUser = async (userId) => {
@@ -274,76 +364,142 @@ const UserManagement = () => {
                     Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Assigned Companies
+                    Total Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Actions
+                    Actions 
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-cyber-dark divide-y divide-cyber-red/20">
-                {users.map((user) => (
-                  <tr key={user._id} className="hover:bg-cyber-red/10">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-cyber-red/20 rounded-full flex items-center justify-center">
-                          <span className="text-cyber-red font-medium">
-                            {user.firstName?.charAt(0)?.toUpperCase() || 'U'}{user.lastName?.charAt(0)?.toUpperCase() || 'U'}
+                {users.map((user) => {
+                  const isExpanded = expandedUser === user._id
+                  const showCompanyRow = user.role === 'pentester' && isExpanded
+                  
+                  return (
+                    <React.Fragment key={user._id}>
+                      <tr className="hover:bg-cyber-red/10">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-cyber-red/20 rounded-full flex items-center justify-center">
+                              <span className="text-cyber-red font-medium">
+                                {user.firstName?.charAt(0)?.toUpperCase() || 'U'}{user.lastName?.charAt(0)?.toUpperCase() || 'U'}
+                              </span>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-100">{user.firstName} {user.lastName}</div>
+                              <div className="text-sm text-gray-400">{user.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${
+                            user.role === 'admin' ? 'bg-cyber-red text-white' : 
+                            user.role === 'pentester' ? 'bg-cyber-blue text-white' : 
+                            'bg-gray-600 text-white'
+                          }`}>
+                            {user.role}
                           </span>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-100">{user.firstName} {user.lastName}</div>
-                          <div className="text-sm text-gray-400">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        user.role === 'admin' ? 'bg-cyber-red text-white' : 
-                        user.role === 'pentester' ? 'bg-cyber-blue text-white' : 
-                        'bg-gray-600 text-white'
-                      }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">
-                        {user.assignedCompanies?.length || 0} companies
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className="text-cyber-red hover:text-white p-1 rounded"
-                          title="Edit User"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleAssignCompanies(user)}
-                          className="text-cyber-blue hover:text-white p-1 rounded"
-                          title="Assign Companies"
-                        >
-                          <Key className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user._id)}
-                          className="text-cyber-red hover:text-white p-1 rounded"
-                          title="Delete User"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-300">
+                            {user.assignedCompanies?.length || 0} companies
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            {user.role === 'pentester' && (
+                              <button
+                                onClick={() => handleViewCompanies(user)}
+                                className="text-cyber-blue hover:text-white p-1 rounded"
+                                title="View Assigned Companies"
+                              >
+                                <Building2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleEditUser(user)}
+                              className="text-cyber-red hover:text-white p-1 rounded"
+                              title="Edit User"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleAssignCompanies(user)}
+                              className="text-cyber-blue hover:text-white p-1 rounded"
+                              title="Assign Companies"
+                            >
+                              <Key className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user._id)}
+                              className="text-cyber-red hover:text-white p-1 rounded"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      {/* Expandable row for assigned companies */}
+                      {showCompanyRow && (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-4 bg-cyber-dark/50">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-semibold text-cyber-red flex items-center">
+                                  <Building2 className="w-5 h-5 mr-2" />
+                                  Assigned Companies for {user.firstName} {user.lastName}
+                                </h4>
+                                <button
+                                  onClick={() => handleViewCompanies(user)}
+                                  className="text-gray-400 hover:text-gray-300"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                              
+                              {userCompanies.length === 0 ? (
+                                <div className="text-center py-8">
+                                  <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                  <p className="text-gray-400">No companies assigned to this pentester</p>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {userCompanies.map((company) => (
+                                    <div key={company._id} className="cyber-card p-4 border-l-4 border-cyber-blue">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <h5 className="font-medium text-gray-100 mb-2">{company.name}</h5>
+                                          <p className="text-sm text-gray-400 mb-1">{company.country}</p>
+                                          <p className="text-sm text-gray-400 mb-1">{company.industry}</p>
+                                          <p className="text-xs text-gray-500">
+                                            {company.ipAddresses?.length || 0} IPs, {company.subdomains?.length || 0} Subdomains
+                                          </p>
+                                        </div>
+                                        <button
+                                          onClick={() => handleRemoveFromCompany(user._id, company._id)}
+                                          className="text-red-400 hover:text-red-300 p-1 rounded"
+                                          title="Remove from this company"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -495,15 +651,32 @@ const UserManagement = () => {
             {modalMode === 'assign' && (
               <form onSubmit={(e) => {
                 e.preventDefault()
-                const companyIds = Array.from(e.target.querySelectorAll('input[name="companies[]"]:checked'))
+                const checkedCompanyIds = Array.from(e.target.querySelectorAll('input[name="companies[]"]:checked'))
                   .map(input => input.value)
+                
+                // Get existing assigned company IDs
+                const existingCompanyIds = selectedUser?.assignedCompanies?.map(c => c._id || c) || []
+                
+                // Combine existing with newly selected (avoiding duplicates)
+                const allCompanyIds = [...new Set([...existingCompanyIds, ...checkedCompanyIds])]
+                
                 console.log('Assigning companies to user:', selectedUser._id) // Debug log
-                console.log('Selected company IDs:', companyIds) // Debug log
-                console.log('Data being sent:', { userId: selectedUser._id, companyIds }) // Debug log
-                handleSubmit({ userId: selectedUser._id, companyIds })
+                console.log('Currently assigned:', existingCompanyIds) // Debug log
+                console.log('Newly selected:', checkedCompanyIds) // Debug log
+                console.log('Final company list:', allCompanyIds) // Debug log
+                console.log('Data being sent:', { userId: selectedUser._id, companyIds: allCompanyIds }) // Debug log
+                handleSubmit({ userId: selectedUser._id, companyIds: allCompanyIds })
               }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Assign Companies</label>
+                  <div className="mb-3 p-3 bg-cyber-dark/30 rounded border border-cyber-red/20">
+                    <p className="text-sm text-gray-300 mb-2">
+                      <strong>Current Assignments:</strong> {selectedUser?.assignedCompanies?.length || 0} companies
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Select additional companies to assign. Your selection will be added to existing assignments.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border border border-cyber-red/30 rounded p-2">
                     {companies.map((company) => (
                       <div key={company._id} className="flex items-center space-x-2">
@@ -526,7 +699,7 @@ const UserManagement = () => {
                     type="submit"
                     className="cyber-button px-6 py-2"
                   >
-                    Assign Companies
+                    Update Assignments
                   </button>
                 </div>
               </form>

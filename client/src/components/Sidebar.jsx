@@ -12,7 +12,8 @@ import {
   LogOut,
   User,
   Globe2,
-  Settings
+  Settings,
+  History
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -26,7 +27,10 @@ const Sidebar = () => {
     { path: '/companies', icon: Building2, label: 'Companies' },
     { path: '/countries', icon: Globe, label: 'Countries' },
     { path: '/people', icon: Users, label: 'People' },
-    { path: '/user-management', icon: Users, label: 'Pentester Management' },
+    ...(user?.role === 'admin' ? [
+      { path: '/user-management', icon: Users, label: 'Pentester Management' },
+      { path: '/audit-trail', icon: History, label: 'Audit Trail' }
+    ] : []),
     { path: '/profile', icon: Settings, label: 'Profile' },
   ]
 

@@ -29,6 +29,7 @@ const Companies = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const [newIpAddress, setNewIpAddress] = useState('')
   const [newSubdomain, setNewSubdomain] = useState('')
@@ -306,7 +307,15 @@ const Companies = () => {
 
   const handleUpdateCompany = async (id, companyData) => {
     try {
+      console.log('Updating company with ID:', id)
+      console.log('Company data being sent:', companyData)
+      console.log('Domains being sent:', companyData.domains)
       const response = await companiesAPI.update(id, companyData)
+      console.log('Update response:', response)
+      if (response.data) {
+        console.log('Updated company data:', response.data)
+        console.log('Updated company domains:', response.data.domains)
+      }
       
       if (response.success) {
         // Refresh companies list
@@ -315,6 +324,8 @@ const Companies = () => {
           setCompanies(updatedResponse.data)
         }
         setSelectedCompany(null)
+        setIsEditMode(false)
+        setShowAddModal(false)
       } else {
         alert('Failed to update company: ' + (response.message || 'Unknown error'))
       }
@@ -330,6 +341,7 @@ const Companies = () => {
       const response = await companiesAPI.getById(company._id)
       if (response.success) {
         setSelectedCompany(response.data)
+        setIsEditMode(false)
         setNewIpAddress('')
         setNewSubdomain('')
         setNewEmployeeFirstName('')
@@ -341,6 +353,7 @@ const Companies = () => {
       } else {
         // Fallback to using the company from the list
         setSelectedCompany(company)
+        setIsEditMode(false)
         setNewIpAddress('')
         setNewSubdomain('')
         setNewEmployeeFirstName('')
@@ -354,6 +367,7 @@ const Companies = () => {
       console.error('Error fetching company details:', error)
       // Fallback to using the company from the list
       setSelectedCompany(company)
+      setIsEditMode(false)
       setNewIpAddress('')
       setNewSubdomain('')
       setNewEmployeeFirstName('')
@@ -366,8 +380,11 @@ const Companies = () => {
   }
 
   const handleEditCompany = (company) => {
+    console.log('handleEditCompany called with:', company)
     setSelectedCompany(company)
-    setShowAddModal(false)
+    setIsEditMode(true)
+    setShowAddModal(true)
+    console.log('After setting - selectedCompany should be:', company)
   }
 
   const handleAddEmployeeForCompany = async () => {
@@ -730,6 +747,13 @@ const Companies = () => {
           : 'No IP addresses registered'}
       </div>
       
+      <div class="info-label">Domains:</div>
+      <div class="info-value">
+        ${company.domains && company.domains.length > 0 
+          ? company.domains.join(', ') 
+          : 'No domains registered'}
+      </div>
+      
       <div class="info-label">Subdomains:</div>
       <div class="info-value">
         ${company.subdomains && company.subdomains.length > 0 
@@ -826,6 +850,7 @@ const Companies = () => {
             foundedYear: company.foundedYear,
             isActive: company.isActive,
             ipAddresses: company.ipAddresses || [],
+            domains: company.domains || [],
             subdomains: company.subdomains || [],
             createdAt: company.createdAt,
             updatedAt: company.updatedAt,
@@ -873,6 +898,7 @@ const Companies = () => {
             company.isActive ? 'Active' : 'Inactive',
             employees.length,
             company.ipAddresses ? company.ipAddresses.join('; ') : '',
+            company.domains ? company.domains.join('; ') : '',
             company.subdomains ? company.subdomains.join('; ') : '',
             new Date(company.createdAt).toLocaleString()
           ]
@@ -1230,7 +1256,11 @@ const Companies = () => {
         </div>
         {user?.role === 'admin' && (
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setShowAddModal(true)
+              setIsEditMode(false)
+              setSelectedCompany(null)
+            }}
             className="cyber-button-green flex items-center"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -1360,15 +1390,15 @@ const Companies = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {user?.role === 'admin' && (
-                          <button
-                            onClick={() => handleEditCompany(company)}
-                            className="text-cyber-red hover:text-cyber-yellow transition-colors"
-                            title="Edit Company"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        )}
+                        
+                        <button
+                          onClick={() => handleEditCompany(company)}
+                          className="text-cyber-red hover:text-cyber-blue transition-colors"
+                          title="Edit Company"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        
                         <button
                           onClick={() => handlePrintCompany(company)}
                           className="text-cyber-red hover:text-cyber-yellow transition-colors"
@@ -1399,7 +1429,9 @@ const Companies = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="cyber-card p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-cyber-blue mb-4">Add New Company</h2>
+            <h2 className="text-xl font-bold text-cyber-blue mb-4">
+              {isEditMode ? 'Edit Company' : 'Add New Company'}
+            </h2>
             <form ref={formRef} onSubmit={(e) => {
               e.preventDefault()
               const form = e.target
@@ -1414,7 +1446,15 @@ const Companies = () => {
                 ipAddresses: form.ipAddresses.value ? form.ipAddresses.value.split(',').map(ip => ip.trim()) : [],
                 isActive: form.isActive.checked
               }
-              handleAddCompany(companyData)
+              console.log('Form submission - isEditMode:', isEditMode)
+              console.log('Form submission - selectedCompany:', selectedCompany)
+              if (isEditMode && selectedCompany) {
+                console.log('Calling handleUpdateCompany for:', selectedCompany._id)
+                handleUpdateCompany(selectedCompany._id, companyData)
+              } else {
+                console.log('Calling handleAddCompany')
+                handleAddCompany(companyData)
+              }
             }}>
               <div className="space-y-4">
                 <div>
@@ -1425,6 +1465,7 @@ const Companies = () => {
                     required
                     className="cyber-input"
                     placeholder="Enter company name"
+                    defaultValue={isEditMode && selectedCompany ? selectedCompany.name : ''}
                   />
                 </div>
                 <div>
@@ -1433,6 +1474,7 @@ const Companies = () => {
                     name="country"
                     required
                     className="cyber-input pl-10 appearance-none cursor-pointer"
+                    defaultValue={isEditMode && selectedCompany ? selectedCompany.country : ''}
                   >
                     <option value="">Select a country</option>
                     <option value="Afghanistan">Afghanistan</option>
@@ -1632,6 +1674,7 @@ const Companies = () => {
                     required
                     className="cyber-input"
                     placeholder="Enter industry"
+                    defaultValue={isEditMode && selectedCompany ? selectedCompany.industry : ''}
                   />
                 </div>
                 <div>
@@ -1641,6 +1684,7 @@ const Companies = () => {
                     name="website"
                     className="cyber-input"
                     placeholder="https://example.com"
+                    defaultValue={isEditMode && selectedCompany ? selectedCompany.website : ''}
                   />
                 </div>
                 <div>
@@ -1652,6 +1696,7 @@ const Companies = () => {
                     max={new Date().getFullYear()}
                     className="cyber-input"
                     placeholder="2024"
+                    defaultValue={isEditMode && selectedCompany ? selectedCompany.foundedYear || '' : ''}
                   />
                 </div>
                 <div>
@@ -1661,6 +1706,7 @@ const Companies = () => {
                     name="domains"
                     className="cyber-input"
                     placeholder="example.com,www.example.com"
+                    defaultValue={isEditMode && selectedCompany && selectedCompany.domains ? selectedCompany.domains.join(', ') : ''}
                   />
                 </div>
                 <div>
@@ -1670,6 +1716,7 @@ const Companies = () => {
                     name="subdomains"
                     className="cyber-input"
                     placeholder="secure.example.com,online.example.com"
+                    defaultValue={isEditMode && selectedCompany && selectedCompany.subdomains ? selectedCompany.subdomains.join(', ') : ''}
                   />
                 </div>
                 <div>
@@ -1679,13 +1726,14 @@ const Companies = () => {
                     name="ipAddresses"
                     className="cyber-input"
                     placeholder="203.0.113.10,203.0.113.20"
+                    defaultValue={isEditMode && selectedCompany && selectedCompany.ipAddresses ? selectedCompany.ipAddresses.join(', ') : ''}
                   />
                 </div>
                 <div className="flex items-center">
                   <input
                     type="checkbox"
                     name="isActive"
-                    defaultChecked={true}
+                    defaultChecked={isEditMode && selectedCompany ? selectedCompany.isActive : true}
                     className="h-4 w-4 bg-cyber-dark border-cyber-blue/30 rounded text-cyber-blue focus:ring-cyber-blue focus:ring-2"
                   />
                   <label className="ml-2 text-sm font-medium text-gray-300">Active</label>
@@ -1694,7 +1742,11 @@ const Companies = () => {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => {
+                    setShowAddModal(false)
+                    setIsEditMode(false)
+                    setSelectedCompany(null)
+                  }}
                   className="cyber-button"
                 >
                   Cancel
@@ -1703,7 +1755,7 @@ const Companies = () => {
                   type="submit"
                   className="cyber-button-green"
                 >
-                  Add Company
+                  {isEditMode ? 'Update Company' : 'Add Company'}
                 </button>
               </div>
             </form>
@@ -1712,7 +1764,7 @@ const Companies = () => {
       )}
 
       {/* View Company Details Modal */}
-      {selectedCompany && (
+      {selectedCompany && !isEditMode && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="cyber-card p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">

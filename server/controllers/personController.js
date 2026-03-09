@@ -6,6 +6,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
+const auditService = require('../services/auditService');
 
 // Escape user input used in regex to avoid ReDoS / NoSQL-style injections and limit length
 const escapeRegex = (str) => {
@@ -178,8 +179,46 @@ exports.createPerson = async (req, res) => {
 
         await person.save();
 
-        // If this person was created in the context of a company and we have an authenticated user,
-        // update the company's lastUpdatedBy fields so admins can see who added the employee.
+        // Log employee addition to company audit trail
+        if (company && req.user) {
+            try {
+                // Find the company to get its ID for audit logging
+                const companyDoc = await Company.findOne({ name: company });
+                
+                if (companyDoc) {
+                    await auditService.logCompanyChange(
+                        companyDoc._id,
+                        req.user._id,
+                        `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                        req.user.role,
+                        'add_employee',
+                        [{
+                            field: 'employee',
+                            newValue: {
+                                name: `${person.firstName} ${person.lastName}`,
+                                email: person.email,
+                                position: person.position || 'Not specified',
+                                department: person.department || 'Not specified'
+                            },
+                            timestamp: new Date()
+                        }],
+                        `Added employee: ${person.firstName} ${person.lastName} (${person.email})`
+                    );
+                    
+                    console.log('Employee addition logged to audit trail:', {
+                        company: companyDoc.name,
+                        employee: person.firstName + ' ' + person.lastName,
+                        user: req.user.firstName + ' ' + req.user.lastName
+                    });
+                }
+            } catch (auditError) {
+                console.error('Error logging employee addition to audit trail:', auditError);
+                // Don't fail the request if audit logging fails
+            }
+        }
+
+        // If this person was created in context of a company and we have an authenticated user,
+        // update company's lastUpdatedBy fields so admins can see who added employee.
         if (company && req.user) {
             await Company.findOneAndUpdate(
                 { name: company },
@@ -312,6 +351,44 @@ exports.deletePerson = async (req, res) => {
           } catch (err) {
             console.warn('Failed to remove associated photo for deleted person:', err);
           }
+        }
+
+        // Log employee deletion to company audit trail
+        if (person.company && req.user) {
+            try {
+                // Find company to get its ID for audit logging
+                const companyDoc = await Company.findOne({ name: person.company });
+                
+                if (companyDoc) {
+                    await auditService.logCompanyChange(
+                        companyDoc._id,
+                        req.user._id,
+                        `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                        req.user.role,
+                        'remove_employee',
+                        [{
+                            field: 'employee',
+                            oldValue: {
+                                name: `${person.firstName} ${person.lastName}`,
+                                email: person.email,
+                                position: person.position || 'Not specified',
+                                department: person.department || 'Not specified'
+                            },
+                            timestamp: new Date()
+                        }],
+                        `Removed employee: ${person.firstName} ${person.lastName} (${person.email})`
+                    );
+                    
+                    console.log('Employee deletion logged to audit trail:', {
+                        company: companyDoc.name,
+                        employee: person.firstName + ' ' + person.lastName,
+                        user: req.user.firstName + ' ' + req.user.lastName
+                    });
+                }
+            } catch (auditError) {
+                console.error('Error logging employee deletion to audit trail:', auditError);
+                // Don't fail request if audit logging fails
+            }
         }
 
         await person.deleteOne();

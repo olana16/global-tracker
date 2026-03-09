@@ -3,6 +3,8 @@ const router = express.Router();
 const { check } = require('express-validator');
 const companyController = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
+const { checkCompanyUpdateAccess, checkCompanyTechnicalAccess } = require('../middleware/companyAccess');
+const auditService = require('../services/auditService');
 const rateLimit = require('express-rate-limit');
 
 const exportLimiter = rateLimit({
@@ -29,11 +31,11 @@ router.post(
   companyController.createCompany
 );
 
-// Update a company
+// Update a company (admin or assigned pentester)
 router.put(
   '/:id',
   protect,
-  authorize('admin'),
+  checkCompanyUpdateAccess,
   [
     check('name', 'Company name is required').optional().not().isEmpty(),
     check('country', 'Country is required').optional().not().isEmpty()
@@ -50,16 +52,59 @@ router.get('/:id/export', protect, authorize('admin'), exportLimiter, companyCon
 // Get people by company
 router.get('/:id/people', companyController.getCompanyPeople);
 
-// Add IP address to company (admin and pentester)
-router.post('/:id/ips', protect, authorize('admin', 'pentester'), companyController.addIpAddress);
+// Add IP address to company (admin or assigned pentester)
+router.post('/:id/ips', protect, checkCompanyTechnicalAccess, companyController.addIpAddress);
 
-// Remove IP address from company (admin and pentester)
-router.delete('/:id/ips/:ip', protect, authorize('admin', 'pentester'), companyController.removeIpAddress);
+// Remove IP address from company (admin or assigned pentester)
+router.delete('/:id/ips/:ip', protect, checkCompanyTechnicalAccess, companyController.removeIpAddress);
 
-// Add subdomain to company (admin and pentester)
-router.post('/:id/subdomains', protect, authorize('admin', 'pentester'), companyController.addSubdomain);
+// Add subdomain to company (admin or assigned pentester)
+router.post('/:id/subdomains', protect, checkCompanyTechnicalAccess, companyController.addSubdomain);
 
-// Remove subdomain from company (admin and pentester)
-router.delete('/:id/subdomains/:subdomain', protect, authorize('admin', 'pentester'), companyController.removeSubdomain);
+// Remove subdomain from company (admin or assigned pentester)
+router.delete('/:id/subdomains/:subdomain', protect, checkCompanyTechnicalAccess, companyController.removeSubdomain);
+
+// Get detailed audit history for a specific company
+router.get('/:id/audit', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+    
+    const changeHistory = await auditService.getCompanyChangeHistory(id, parseInt(limit));
+    
+    res.json({
+      success: true,
+      data: changeHistory
+    });
+  } catch (error) {
+    console.error('Error fetching company audit history:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Get all company changes (admin only)
+router.get('/audit/all', protect, authorize('admin'), async (req, res) => {
+  try {
+    const filters = {
+      companyId: req.query.companyId,
+      userId: req.query.userId,
+      action: req.query.action,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20
+    };
+    
+    const allChanges = await auditService.getAllCompanyChanges(filters);
+    
+    res.json({
+      success: true,
+      ...allChanges
+    });
+  } catch (error) {
+    console.error('Error fetching all company changes:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
 
 module.exports = router;

@@ -5,6 +5,7 @@ const { validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const auditService = require('../services/auditService');
 
 // Escape user input used in regex to avoid ReDoS / NoSQL-style injections
 const escapeRegex = (str) => {
@@ -74,6 +75,13 @@ exports.getCompanies = async (req, res) => {
     console.log('Companies found:', companies.length) // Debug log
     console.log('Companies data:', companies) // Debug log
     
+    // Debug: Check domains in first company
+    if (companies.length > 0) {
+      console.log('First company full data:', companies[0])
+      console.log('First company domains:', companies[0].domains)
+      console.log('First company toObject:', companies[0].toObject())
+    }
+    
     // Add person count to each company
     const companiesWithCount = await Promise.all(
       companies.map(async (company) => {
@@ -87,6 +95,12 @@ exports.getCompanies = async (req, res) => {
     
     // Get total count for pagination
     const count = await Company.countDocuments(query);
+    
+    // Debug: Check domains in final response
+    if (companiesWithCount.length > 0) {
+      console.log('Final response first company:', companiesWithCount[0])
+      console.log('Final response first company domains:', companiesWithCount[0].domains)
+    }
     
     res.json({
       success: true,
@@ -166,6 +180,7 @@ exports.createCompany = async (req, res) => {
             website, 
             foundedYear, 
             revenue,
+            domains = [],
             ipAddresses = [],
             subdomains = []
         } = req.body;
@@ -188,13 +203,44 @@ exports.createCompany = async (req, res) => {
             website,
             foundedYear,
             revenue: revenue || { amount: 0, currency: 'USD' }, // Handle revenue properly
+            domains: Array.isArray(domains) ? domains : [domains],
             ipAddresses: Array.isArray(ipAddresses) ? ipAddresses : [ipAddresses],
             subdomains: Array.isArray(subdomains) ? subdomains : [subdomains]
         });
 
+        // Add creation audit tracking
+        if (req.user) {
+            company.lastUpdatedBy = req.user._id;
+            company.lastUpdatedByName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim();
+            company.lastUpdatedByRole = req.user.role;
+        }
+
         console.log('About to save company with country:', country);
         await company.save();
         console.log('Company saved successfully with country:', company.country);
+
+        // Log detailed audit information
+        if (req.user) {
+            await auditService.logCompanyChange(
+                company._id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                'create',
+                [{
+                    field: 'company_creation',
+                    newValue: {
+                        name: company.name,
+                        country: company.country,
+                        industry: company.industry,
+                        website: company.website,
+                        foundedYear: company.foundedYear
+                    },
+                    timestamp: new Date()
+                }],
+                `Created new company: ${company.name}`
+            );
+        }
 
         // Return company data (no need to populate country since it's a string)
         res.status(201).json({
@@ -251,7 +297,7 @@ exports.updateCompany = async (req, res) => {
         // Only update fields that are actually passed in the request
         const allowedUpdates = [
             'name', 'country', 'industry', 'website', 'foundedYear', 
-            'revenue', 'isActive'
+            'revenue', 'isActive', 'domains', 'subdomains', 'ipAddresses'
         ];
         
         allowedUpdates.forEach(update => {
@@ -260,12 +306,35 @@ exports.updateCompany = async (req, res) => {
             }
         });
         
+        // Add audit tracking
+        if (req.user) {
+            updates.lastUpdatedBy = req.user._id;
+            updates.lastUpdatedByName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim();
+            updates.lastUpdatedByRole = req.user.role;
+        }
+        
+        // Get old data for comparison
+        const oldCompany = await Company.findById(req.params.id);
+        
         // Apply updates
         company = await Company.findByIdAndUpdate(
             req.params.id,
             { $set: updates },
             { new: true, runValidators: true }
         ).populate('country', 'name code');
+
+        // Log detailed changes
+        if (req.user && oldCompany) {
+            await auditService.logFieldChanges(
+                req.params.id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                oldCompany.toObject(),
+                company.toObject(),
+                'update'
+            );
+        }
 
         res.json({
             success: true,
@@ -356,6 +425,18 @@ exports.addIpAddress = async (req, res) => {
             { new: true, runValidators: true }
         );
         
+        // Log IP address addition
+        if (req.user && company) {
+            await auditService.logIpAddressChange(
+                req.params.id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                ipAddress,
+                'add_ip'
+            );
+        }
+        
         if (!company) {
             return res.status(404).json({
                 success: false,
@@ -392,6 +473,18 @@ exports.removeIpAddress = async (req, res) => {
             update,
             { new: true }
         );
+        
+        // Log IP address removal
+        if (req.user && company) {
+            await auditService.logIpAddressChange(
+                req.params.id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                req.params.ip,
+                'remove_ip'
+            );
+        }
         
         if (!company) {
             return res.status(404).json({
@@ -439,6 +532,18 @@ exports.addSubdomain = async (req, res) => {
             { new: true, runValidators: true }
         );
         
+        // Log subdomain addition
+        if (req.user && company) {
+            await auditService.logSubdomainChange(
+                req.params.id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                subdomain,
+                'add_subdomain'
+            );
+        }
+        
         if (!company) {
             return res.status(404).json({
                 success: false,
@@ -475,6 +580,18 @@ exports.removeSubdomain = async (req, res) => {
             update,
             { new: true }
         );
+        
+        // Log subdomain removal
+        if (req.user && company) {
+            await auditService.logSubdomainChange(
+                req.params.id,
+                req.user._id,
+                `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+                req.user.role,
+                req.params.subdomain,
+                'remove_subdomain'
+            );
+        }
         
         if (!company) {
             return res.status(404).json({

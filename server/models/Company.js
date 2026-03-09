@@ -53,6 +53,11 @@ const companySchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    domains: [{
+        type: String,
+        trim: true,
+        lowercase: true
+    }],
     ipAddresses: [{
         type: String,
         trim: true
@@ -85,6 +90,11 @@ companySchema.virtual('personCount', {
     localField: 'name',
     foreignField: 'company',
     count: true
+});
+
+// Virtual for domain count
+companySchema.virtual('domainCount').get(function() {
+    return this.domains ? this.domains.length : 0;
 });
 
 // Virtual for IP count
