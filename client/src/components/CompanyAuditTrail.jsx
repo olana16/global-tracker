@@ -102,6 +102,10 @@ const CompanyAuditTrail = () => {
         return <Edit className="w-4 h-4 text-blue-500" />
       case 'delete':
         return <Trash2 className="w-4 h-4 text-red-500" />
+      case 'add_employee':
+        return <User className="w-4 h-4 text-purple-500" />
+      case 'remove_employee':
+        return <Trash2 className="w-4 h-4 text-red-500" />
       default:
         return <Edit className="w-4 h-4 text-gray-500" />
     }
@@ -114,6 +118,10 @@ const CompanyAuditTrail = () => {
       case 'update':
         return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'delete':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'add_employee':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'remove_employee':
         return 'bg-red-100 text-red-800 border-red-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
@@ -133,12 +141,18 @@ const CompanyAuditTrail = () => {
         return <Globe className="w-4 h-4 text-gray-500" />
       case 'company_creation':
         return <Plus className="w-4 h-4 text-green-500" />
+      case 'employee':
+        return <User className="w-4 h-4 text-purple-500" />
       default:
         return <Edit className="w-4 h-4 text-gray-500" />
     }
   }
 
   const formatFieldName = (field) => {
+    if (field === 'employee') return 'Employee';
+    if (field === 'company_creation') return 'Company Creation';
+    if (field === 'ipAddresses') return 'IP Address';
+    if (field === 'subdomains') return 'Subdomain';
     return field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
   }
 
@@ -472,6 +486,30 @@ const CompanyAuditTrail = () => {
                                                           : String(fieldChange.newValue || 'None')
                                                         }
                                                       </span>
+                                                    </div>
+                                                  </div>
+                                                ) : fieldChange.field === 'employee' && typeof fieldChange.newValue === 'object' ? (
+                                                  <div className="space-y-2 text-sm">
+                                                    <div className="text-gray-300">
+                                                      <span className="font-medium text-purple-400">Employee Added:</span>
+                                                    </div>
+                                                    <div className="ml-4 space-y-1">
+                                                      <div><span className="text-gray-400">Name:</span> <span className="text-gray-300">{fieldChange.newValue.name}</span></div>
+                                                      <div><span className="text-gray-400">Email:</span> <span className="text-gray-300">{fieldChange.newValue.email}</span></div>
+                                                      <div><span className="text-gray-400">Position:</span> <span className="text-gray-300">{fieldChange.newValue.position}</span></div>
+                                                      <div><span className="text-gray-400">Department:</span> <span className="text-gray-300">{fieldChange.newValue.department}</span></div>
+                                                    </div>
+                                                  </div>
+                                                ) : fieldChange.field === 'employee' && typeof fieldChange.oldValue === 'object' ? (
+                                                  <div className="space-y-2 text-sm">
+                                                    <div className="text-gray-300">
+                                                      <span className="font-medium text-red-400">Employee Removed:</span>
+                                                    </div>
+                                                    <div className="ml-4 space-y-1">
+                                                      <div><span className="text-gray-400">Name:</span> <span className="text-gray-300">{fieldChange.oldValue.name}</span></div>
+                                                      <div><span className="text-gray-400">Email:</span> <span className="text-gray-300">{fieldChange.oldValue.email}</span></div>
+                                                      <div><span className="text-gray-400">Position:</span> <span className="text-gray-300">{fieldChange.oldValue.position}</span></div>
+                                                      <div><span className="text-gray-400">Department:</span> <span className="text-gray-300">{fieldChange.oldValue.department}</span></div>
                                                     </div>
                                                   </div>
                                                 ) : (
