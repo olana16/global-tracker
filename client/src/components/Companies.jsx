@@ -326,10 +326,6 @@ const Companies = () => {
         setSelectedCompany(null)
         setIsEditMode(false)
         setShowAddModal(false)
-        
-        // Trigger dashboard refresh
-        console.log('Dispatching companyUpdated event')
-        window.dispatchEvent(new CustomEvent('companyUpdated', { detail: { company: response.data } }))
       } else {
         alert('Failed to update company: ' + (response.message || 'Unknown error'))
       }
@@ -751,6 +747,13 @@ const Companies = () => {
           : 'No IP addresses registered'}
       </div>
       
+      <div class="info-label">Domains:</div>
+      <div class="info-value">
+        ${company.domains && company.domains.length > 0 
+          ? company.domains.join(', ') 
+          : 'No domains registered'}
+      </div>
+      
       <div class="info-label">Subdomains:</div>
       <div class="info-value">
         ${company.subdomains && company.subdomains.length > 0 
@@ -846,8 +849,8 @@ const Companies = () => {
             website: company.website,
             foundedYear: company.foundedYear,
             isActive: company.isActive,
-            domains: company.domains || [],
             ipAddresses: company.ipAddresses || [],
+            domains: company.domains || [],
             subdomains: company.subdomains || [],
             createdAt: company.createdAt,
             updatedAt: company.updatedAt,
@@ -893,9 +896,9 @@ const Companies = () => {
             company.website,
             company.foundedYear,
             company.isActive ? 'Active' : 'Inactive',
-            company.domains ? company.domains.join('; ') : '',
             employees.length,
             company.ipAddresses ? company.ipAddresses.join('; ') : '',
+            company.domains ? company.domains.join('; ') : '',
             company.subdomains ? company.subdomains.join('; ') : '',
             new Date(company.createdAt).toLocaleString()
           ]
@@ -1833,14 +1836,6 @@ const Companies = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Website</label>
                   <div className="text-gray-100 font-mono">{selectedCompany.website}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Domains</label>
-                  <div className="text-gray-100 font-mono">
-                    {selectedCompany.domains && selectedCompany.domains.length > 0 
-                      ? selectedCompany.domains.join(', ') 
-                      : 'No domains registered'}
-                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Founded Year</label>
