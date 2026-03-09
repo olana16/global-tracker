@@ -75,6 +75,13 @@ exports.getCompanies = async (req, res) => {
     console.log('Companies found:', companies.length) // Debug log
     console.log('Companies data:', companies) // Debug log
     
+    // Debug: Check domains in first company
+    if (companies.length > 0) {
+      console.log('First company full data:', companies[0])
+      console.log('First company domains:', companies[0].domains)
+      console.log('First company toObject:', companies[0].toObject())
+    }
+    
     // Add person count to each company
     const companiesWithCount = await Promise.all(
       companies.map(async (company) => {
@@ -88,6 +95,12 @@ exports.getCompanies = async (req, res) => {
     
     // Get total count for pagination
     const count = await Company.countDocuments(query);
+    
+    // Debug: Check domains in final response
+    if (companiesWithCount.length > 0) {
+      console.log('Final response first company:', companiesWithCount[0])
+      console.log('Final response first company domains:', companiesWithCount[0].domains)
+    }
     
     res.json({
       success: true,
@@ -167,6 +180,7 @@ exports.createCompany = async (req, res) => {
             website, 
             foundedYear, 
             revenue,
+            domains = [],
             ipAddresses = [],
             subdomains = []
         } = req.body;
@@ -189,6 +203,7 @@ exports.createCompany = async (req, res) => {
             website,
             foundedYear,
             revenue: revenue || { amount: 0, currency: 'USD' }, // Handle revenue properly
+            domains: Array.isArray(domains) ? domains : [domains],
             ipAddresses: Array.isArray(ipAddresses) ? ipAddresses : [ipAddresses],
             subdomains: Array.isArray(subdomains) ? subdomains : [subdomains]
         });
@@ -282,7 +297,7 @@ exports.updateCompany = async (req, res) => {
         // Only update fields that are actually passed in the request
         const allowedUpdates = [
             'name', 'country', 'industry', 'website', 'foundedYear', 
-            'revenue', 'isActive'
+            'revenue', 'isActive', 'domains', 'subdomains', 'ipAddresses'
         ];
         
         allowedUpdates.forEach(update => {

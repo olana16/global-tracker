@@ -27,6 +27,7 @@ const Dashboard = () => {
     totalPeople: 0,
     totalSubdomains: 0,
     totalIPs: 0,
+    totalDomains: 0,
     activeRegistrations: 0
   })
   const [recentActivity, setRecentActivity] = useState([])
@@ -54,12 +55,18 @@ const Dashboard = () => {
       console.log('API calls completed') // Debug log
       
       console.log('Companies response:', companiesData) // Debug log
+      console.log('Companies data length:', companiesData.data?.length) // Debug log
+      if (companiesData.success && companiesData.data) {
+        console.log('First company data:', companiesData.data[0]) // Debug log
+        console.log('First company domains:', companiesData.data[0].domains) // Debug log
+      }
       console.log('Countries response:', countriesData) // Debug log
       console.log('People response:', peopleData) // Debug log
       
       // Calculate real counts from actual backend data
       let totalSubdomains = 0
       let totalIPs = 0
+      let totalDomains = 0
       let totalPeople = 0
       let totalCountries = 0
       
@@ -73,9 +80,12 @@ const Dashboard = () => {
           console.log('Company ipAddresses:', company.ipAddresses) // Debug log
           console.log('Company country:', company.country) // Debug log
           
-          // Count subdomains and IPs from actual company data
+          // Count subdomains, IPs, and domains from actual company data
           totalSubdomains += company.subdomains?.length || 1
           totalIPs += company.ipAddresses?.length || company.ips?.length || 0
+          totalDomains += company.domains?.length || 0
+          
+          console.log(`Company ${company.name}: domains = ${company.domains?.length || 0}, totalDomains = ${totalDomains}`)
           
           console.log('Company subdomains count:', company.subdomains?.length || 1) // Debug log
           console.log('Company IPs count:', company.ipAddresses?.length || company.ips?.length || 0) // Debug log
@@ -122,10 +132,12 @@ const Dashboard = () => {
         totalPeople: totalPeople,
         totalSubdomains: totalSubdomains,
         totalIPs: totalIPs,
+        totalDomains: totalDomains,
         activeRegistrations: companiesData.success ? companiesData.data.filter(c => c.isActive).length : 0
       }
       
       console.log('New stats being set:', newStats) // Debug log
+      console.log('Final totalDomains:', totalDomains) // Debug log
       setStats(newStats)
       
       // Create recent activity from real data with actual timestamps
@@ -212,6 +224,7 @@ const Dashboard = () => {
         totalPeople: 0,
         totalSubdomains: 0,
         totalIPs: 0,
+        totalDomains: 0,
         activeRegistrations: 0
       })
       setRecentActivity([])
@@ -222,6 +235,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData()
+  }, [])
+
+  // Listen for company update events
+  useEffect(() => {
+    const handleCompanyUpdated = (event) => {
+      console.log('Company updated, refreshing dashboard:', event.detail)
+      fetchDashboardData()
+    }
+
+    window.addEventListener('companyUpdated', handleCompanyUpdated)
+    return () => {
+      window.removeEventListener('companyUpdated', handleCompanyUpdated)
+    }
   }, [])
 
   const handleImport = async (type) => {
@@ -383,6 +409,14 @@ const Dashboard = () => {
       title: 'Total Subdomains',
       value: stats.totalSubdomains,
       change: '+8%',
+      changeType: 'positive',
+      icon: Globe,
+      color: 'cyber-red'
+    },
+    {
+      title: 'Total Domains',
+      value: stats.totalDomains,
+      change: '+10%',
       changeType: 'positive',
       icon: Globe,
       color: 'cyber-red'
