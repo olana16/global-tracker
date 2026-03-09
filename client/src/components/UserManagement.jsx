@@ -654,15 +654,32 @@ const UserManagement = () => {
             {modalMode === 'assign' && (
               <form onSubmit={(e) => {
                 e.preventDefault()
-                const companyIds = Array.from(e.target.querySelectorAll('input[name="companies[]"]:checked'))
+                const checkedCompanyIds = Array.from(e.target.querySelectorAll('input[name="companies[]"]:checked'))
                   .map(input => input.value)
+                
+                // Get existing assigned company IDs
+                const existingCompanyIds = selectedUser?.assignedCompanies?.map(c => c._id || c) || []
+                
+                // Combine existing with newly selected (avoiding duplicates)
+                const allCompanyIds = [...new Set([...existingCompanyIds, ...checkedCompanyIds])]
+                
                 console.log('Assigning companies to user:', selectedUser._id) // Debug log
-                console.log('Selected company IDs:', companyIds) // Debug log
-                console.log('Data being sent:', { userId: selectedUser._id, companyIds }) // Debug log
-                handleSubmit({ userId: selectedUser._id, companyIds })
+                console.log('Currently assigned:', existingCompanyIds) // Debug log
+                console.log('Newly selected:', checkedCompanyIds) // Debug log
+                console.log('Final company list:', allCompanyIds) // Debug log
+                console.log('Data being sent:', { userId: selectedUser._id, companyIds: allCompanyIds }) // Debug log
+                handleSubmit({ userId: selectedUser._id, companyIds: allCompanyIds })
               }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Assign Companies</label>
+                  <div className="mb-3 p-3 bg-cyber-dark/30 rounded border border-cyber-red/20">
+                    <p className="text-sm text-gray-300 mb-2">
+                      <strong>Current Assignments:</strong> {selectedUser?.assignedCompanies?.length || 0} companies
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Select additional companies to assign. Your selection will be added to existing assignments.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border border border-cyber-red/30 rounded p-2">
                     {companies.map((company) => (
                       <div key={company._id} className="flex items-center space-x-2">
@@ -685,7 +702,7 @@ const UserManagement = () => {
                     type="submit"
                     className="cyber-button px-6 py-2"
                   >
-                    Assign Companies
+                    Update Assignments
                   </button>
                 </div>
               </form>
