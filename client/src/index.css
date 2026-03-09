@@ -6,15 +6,15 @@
   body {
     @apply bg-cyber-darker text-gray-100 font-mono;
     background-image: 
-      radial-gradient(circle at 20% 50%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 20%, rgba(239, 68, 68, 0.1) 0%, transparent 50%);
+      radial-gradient(circle at 20% 50%, rgba(8, 145, 178, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(8, 145, 178, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(8, 145, 178, 0.1) 0%, transparent 50%);
     background-attachment: fixed;
   }
 
   /* Remove universal button color override to allow text visibility */
   a {
-    color: #ef4444 !important;
+    color: #0891b2 !important;
   }
 
   button:hover, a:hover {
@@ -27,41 +27,41 @@
   }
 
   .cyber-button:hover, .cyber-button-green:hover, .cyber-button-purple:hover {
-    color: #ef4444 !important;  /* Red text on hover */
+    color: #0891b2 !important;  /* Blue-green text on hover */
   }
 
-  /* Force all text colors to cyber red variants */
+  /* Force all text colors to blue-green variants */
   .text-cyber-red {
-    color: #ef4444 !important;
+    color: #0891b2 !important;
   }
 
   .text-cyber-blue {
-    color: #ef4444 !important;
+    color: #0891b2 !important;
   }
 
   .text-cyber-green {
-    color: #ef4444 !important;
+    color: #059669 !important;
   }
 
   .text-cyber-purple {
-    color: #ef4444 !important;
+    color: #7c3aed !important;
   }
 
   .text-cyber-pink {
-    color: #ef4444 !important;
+    color: #ec4899 !important;
   }
 
   .text-cyber-yellow {
-    color: #ef4444 !important;
+    color: #eab308 !important;
   }
 
   .text-cyber-orange {
-    color: #ef4444 !important;
+    color: #f97316 !important;
   }
 
-  /* Force all SVG icons to use cyber red */
+  /* Force all SVG icons to use blue-green */
   svg {
-    color: #ef4444 !important;
+    color: #0891b2 !important;
   }
 
   /* Ensure button SVG icons are always visible */
@@ -70,18 +70,18 @@
   }
 
   .cyber-button:hover svg, .cyber-button-green:hover svg, .cyber-button-purple:hover svg {
-    color: #ef4444 !important;  /* Red icons on hover */
+    color: #0891b2 !important;  /* Blue-green icons on hover */
   }
 
-  /* Force all Lucide icons to use cyber red */
+  /* Force all Lucide icons to use blue-green */
   .lucide-react {
-    color: #ef4444 !important;
+    color: #0891b2 !important;
   }
 
-  /* Table row hover with red glow */
+  /* Table row hover with blue-green glow */
   table tr:hover {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+    background-color: rgba(8, 145, 178, 0.1) !important;
+    box-shadow: 0 0 10px rgba(8, 145, 178, 0.3) !important;
     transition: all 0.3s ease !important;
   }
 
@@ -92,22 +92,22 @@
 
   /* Enhanced table row hover for specific tables */
   .hover-bg-cyber-blue-5:hover {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+    background-color: rgba(8, 145, 178, 0.1) !important;
+    box-shadow: 0 0 10px rgba(8, 145, 178, 0.3) !important;
   }
 
   /* Table container hover effects */
   .table-container tr:hover {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+    background-color: rgba(8, 145, 178, 0.1) !important;
+    box-shadow: 0 0 15px rgba(8, 145, 178, 0.4) !important;
     transform: translateY(-2px) !important;
     transition: all 0.3s ease !important;
   }
 
   /* Additional table hover effects */
   tbody tr:hover {
-    background-color: rgba(239, 68, 68, 0.1) !important;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3) !important;
+    background-color: rgba(8, 145, 178, 0.1) !important;
+    box-shadow: 0 0 12px rgba(8, 145, 178, 0.3) !important;
     transition: all 0.3s ease !important;
   }
 
@@ -115,38 +115,38 @@
     color: #ffffff !important;
   }
 
-  /* Import button override - force cyber red */
+  /* Import button override - force blue-green */
   button[onClick*="handleFileUpload"],
   button[onClick*="handleImport"],
   .import-button,
   .upload-button {
-    background-color: rgba(239, 68, 68, 0.2) !important;
-    border-color: rgba(239, 68, 68, 0.5) !important;
-    color: #ef4444 !important;
+    background-color: rgba(8, 145, 178, 0.2) !important;
+    border-color: rgba(8, 145, 178, 0.5) !important;
+    color: #0891b2 !important;
   }
 
   button[onClick*="handleFileUpload"]:hover,
   button[onClick*="handleImport"]:hover,
   .import-button:hover,
   .upload-button:hover {
-    background-color: rgba(239, 68, 68, 0.3) !important;
-    border-color: rgba(239, 68, 68, 0.7) !important;
+    background-color: rgba(8, 145, 178, 0.3) !important;
+    border-color: rgba(8, 145, 178, 0.7) !important;
     color: #ffffff !important;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+    box-shadow: 0 0 15px rgba(8, 145, 178, 0.4) !important;
   }
 
   /* Dashboard specific overrides */
   .dashboard-import-button {
-    background-color: rgba(239, 68, 68, 0.2) !important;
-    border-color: rgba(239, 68, 68, 0.5) !important;
-    color: #ef4444 !important;
+    background-color: rgba(8, 145, 178, 0.2) !important;
+    border-color: rgba(8, 145, 178, 0.5) !important;
+    color: #0891b2 !important;
   }
 
   .dashboard-import-button:hover {
-    background-color: rgba(239, 68, 68, 0.3) !important;
-    border-color: rgba(239, 68, 68, 0.7) !important;
+    background-color: rgba(8, 145, 178, 0.3) !important;
+    border-color: rgba(8, 145, 178, 0.7) !important;
     color: #ffffff !important;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4) !important;
+    box-shadow: 0 0 15px rgba(8, 145, 178, 0.4) !important;
   }
 }
 
