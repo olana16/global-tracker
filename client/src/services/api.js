@@ -148,6 +148,16 @@ export const companiesAPI = {
   removeSubdomain: async (id, subdomain) => {
     const response = await api.delete(`/companies/${id}/subdomains/${encodeURIComponent(subdomain.toLowerCase())}`)
     return response.data
+  },
+
+  getAuditHistory: async (id, limit = 50) => {
+    const response = await api.get(`/companies/${id}/audit`, { params: { limit } })
+    return response.data
+  },
+
+  getAllAuditChanges: async (filters = {}) => {
+    const response = await api.get('/companies/audit/all', { params: filters })
+    return response.data
   }
 }
 
