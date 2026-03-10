@@ -145,6 +145,12 @@ export const companiesAPI = {
     return response.data
   },
 
+  addDomain: async (id, domain) => {
+  const response = await api.post(`/companies/${id}/domains`, { domain })
+  return response.data
+},
+
+
   removeSubdomain: async (id, subdomain) => {
     const response = await api.delete(`/companies/${id}/subdomains/${encodeURIComponent(subdomain.toLowerCase())}`)
     return response.data
