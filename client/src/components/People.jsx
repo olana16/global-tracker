@@ -414,7 +414,7 @@ const People = () => {
             }}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">First Name</label>
                   <input
                     type="text"
                     name="firstName"
@@ -425,7 +425,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Last Name</label>
                   <input
                     type="text"
                     name="lastName"
@@ -436,7 +436,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Email</label>
                   <input
                     type="email"
                     name="email"
@@ -447,7 +447,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Phone</label>
                   <input
                     type="tel"
                     name="phone"
@@ -457,7 +457,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Position</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Position</label>
                   <input
                     type="text"
                     name="position"
@@ -467,7 +467,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Department</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Department</label>
                   <input
                     type="text"
                     name="department"
@@ -477,7 +477,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Company</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Company</label>
                   <input
                     type="text"
                     name="company"
@@ -487,7 +487,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Country</label>
                   <input
                     type="text"
                     name="country"
@@ -497,7 +497,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">City</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">City</label>
                   <input
                     type="text"
                     name="city"
@@ -507,7 +507,7 @@ const People = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-md font-medium text-gray-300 mb-2">
                     <input
                       type="checkbox"
                       name="isActive"
