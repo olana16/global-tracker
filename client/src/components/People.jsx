@@ -387,7 +387,7 @@ const People = () => {
       {/* Add/Edit Person Modal */}
       {showAddModal && (viewMode === 'add' || viewMode === 'edit') && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="cyber-card p-6 w-full max-w-md">
+          <div className="cyber-card p-6 w-full max-w-5xl">
             <h2 className="text-xl font-bold text-cyber-red mb-4">
               {selectedPerson ? 'Edit Person' : 'Add New Person'}
             </h2>
@@ -412,7 +412,7 @@ const People = () => {
                 handleAddPerson(personData)
               }
             }}>
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
                   <input
