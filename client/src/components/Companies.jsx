@@ -1428,7 +1428,7 @@ const Companies = () => {
       {/* Add Company Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="cyber-card p-6 w-full max-w-md">
+          <div className="cyber-card p-6 w-full max-w-xl">
             <h2 className="text-xl font-bold text-cyber-blue mb-4">
               {isEditMode ? 'Edit Company' : 'Add New Company'}
             </h2>
@@ -1456,7 +1456,7 @@ const Companies = () => {
                 handleAddCompany(companyData)
               }
             }}>
-              <div className="space-y-4">
+              <div className="space-y-4 grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Company Name *</label>
                   <input

@@ -433,7 +433,7 @@ const CompanyAuditTrail = () => {
                                   <p className="text-gray-400">No detailed changes found for this company</p>
                                 </div>
                               ) : (
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-4">
                                   {detailedChanges.map((change, index) => (
                                     <div key={index} className="cyber-card p-4 border-l-4 border-cyber-blue">
                                       <div className="flex items-start justify-between mb-3">
